@@ -2,7 +2,10 @@ package repository
 
 import (
 	"context"
+	"crypto/sha256"
+	"encoding/hex"
 
+	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5"
 	"github.com/masrayfa/internals/models/domain"
 )
@@ -49,6 +52,29 @@ func (r *UserRepositoryImpl) FindByToken(ctx context.Context, tx pgx.Tx,token st
 
 // Save saves a user
 func (r *UserRepositoryImpl) Save(ctx context.Context, tx pgx.Tx, user domain.User) (domain.User, error) {
+	token := uuid.New().String()
+	status := false
+	isAdmin := false
+
+
+	h := sha256.New()
+	_, err := h.Write([]byte(user.Password))
+	if err != nil {
+		return user, err
+	}
+
+	hashedBytes := h.Sum(nil)
+	hashedString := hex.EncodeToString(hashedBytes)
+
+	script := "INSERT INTO users (username, email, password, token, status, is_admin) VALUES ($1, $2, $3, $4, $5, $6) RETURNING id"
+	row := tx.QueryRow(ctx, script, user.Username, user.Email, hashedString, token, status, isAdmin)
+
+	var id int64
+	err = row.Scan(&id)
+	if err != nil {
+		return user, err
+	}
+
 	var emptyUser domain.User
 	return emptyUser, nil
 }

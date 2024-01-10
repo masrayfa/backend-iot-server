@@ -17,4 +17,5 @@ type UserRepository interface {
 	Update(ctx context.Context, tx pgx.Tx, user domain.User) (domain.User, error)
 	Delete(ctx context.Context, tx pgx.Tx, id int64) error
 	UpdateStatus(ctx context.Context, tx pgx.Tx, id int64, status bool) error
+	UpdatePassword(ctx context.Context, tx pgx.Tx, id int64, password string) error
 }
