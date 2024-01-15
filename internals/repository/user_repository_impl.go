@@ -2,11 +2,10 @@ package repository
 
 import (
 	"context"
-	"crypto/sha256"
-	"encoding/hex"
 
 	"github.com/google/uuid"
-	"github.com/jackc/pgx/v5"
+	"github.com/jackc/pgx/v5/pgxpool"
+	"github.com/masrayfa/internals/helper"
 	"github.com/masrayfa/internals/models/domain"
 )
 
@@ -15,87 +14,126 @@ type UserRepositoryImpl struct {
 }
 
 // NewUserRepositoryImpl returns a new instance of UserRepositoryImpl
-func NewUserRepositoryImpl() UserRepository {
+func NewUserRepository() UserRepository {
 	return &UserRepositoryImpl{}
 }
 
 // FindAll returns all users
-func (r *UserRepositoryImpl) FindAll(ctx context.Context, tx pgx.Tx) ([]domain.User, error) {
+func (r *UserRepositoryImpl) FindAll(ctx context.Context, dbpool *pgxpool.Pool) ([]domain.User, error) {
 	return nil, nil
 }
 
 // FindById returns a user by id
-func (r *UserRepositoryImpl) FindById(ctx context.Context, tx pgx.Tx,id int64) (domain.User, error) {
+func (r *UserRepositoryImpl) FindById(ctx context.Context, dbpool *pgxpool.Pool, id int64) (domain.User, error) {
 	var emptyUser domain.User
 	return emptyUser, nil
 }
 
 // FindByEmail returns a user by email
-func (r *UserRepositoryImpl) FindByEmail(ctx context.Context, tx pgx.Tx,email string) (domain.User, error) {
+func (r *UserRepositoryImpl) FindByEmail(ctx context.Context, dbpool *pgxpool.Pool, email string) (domain.User, error) {
 
 	var emptyUser domain.User
 	return emptyUser, nil
 }
 
 // FindByUsername returns a user by username
-func (r *UserRepositoryImpl) FindByUsername(ctx context.Context, tx pgx.Tx,username string) (domain.User, error) {
+func (r *UserRepositoryImpl) FindByUsername(ctx context.Context, dbpool *pgxpool.Pool, username string) (domain.User, error) {
+
+
 	var emptyUser domain.User
 	return emptyUser, nil
 }
 
 // FindByToken returns a user by token
-func (r *UserRepositoryImpl) FindByToken(ctx context.Context, tx pgx.Tx,token string) (domain.User, error) {
-
+func (r *UserRepositoryImpl) FindByToken(ctx context.Context, dbpool *pgxpool.Pool, token string) (domain.User, error) {
 	var emptyUser domain.User
 	return emptyUser, nil
 }
 
 // Save saves a user
-func (r *UserRepositoryImpl) Save(ctx context.Context, tx pgx.Tx, user domain.User) (domain.User, error) {
+func (r *UserRepositoryImpl) Save(ctx context.Context, dbpool *pgxpool.Pool, user domain.User) (domain.User, error) {
 	token := uuid.New().String()
 	status := false
 	isAdmin := false
 
+	// h := sha256.New()
+	// _, err := h.Write([]byte(user.Password))
+	// if err != nil {
+	// 	return user, err
+	// }
 
-	h := sha256.New()
-	_, err := h.Write([]byte(user.Password))
+	// hashedBytes := h.Sum(nil)
+	// hashedString := hex.EncodeToString(hashedBytes)
+	hashedPassword, err := helper.HashPassword(user.Password)
+
+	tx, err := dbpool.Begin(ctx)
+
+	defer func() {
+		err := recover()
+		if err != nil {
+			err := tx.Rollback(ctx)
+			if err != nil {
+				return
+			}
+		} else {
+			err := tx.Commit(ctx)
+			if err != nil {
+				return
+			}
+		}
+	}()
+
+	script := "INSERT INTO user_person (username, email, password, token, status, isadmin) VALUES ($1, $2, $3, $4, $5, $6) RETURNING id_user"
+	row := tx.QueryRow(ctx, script, user.Username, user.Email, hashedPassword, token, status, isAdmin)
+
+	var idUser int64
+	err = row.Scan(&idUser)
 	if err != nil {
 		return user, err
 	}
 
-	hashedBytes := h.Sum(nil)
-	hashedString := hex.EncodeToString(hashedBytes)
-
-	script := "INSERT INTO users (username, email, password, token, status, is_admin) VALUES ($1, $2, $3, $4, $5, $6) RETURNING id"
-	row := tx.QueryRow(ctx, script, user.Username, user.Email, hashedString, token, status, isAdmin)
-
-	var id int64
-	err = row.Scan(&id)
-	if err != nil {
-		return user, err
-	}
-
-	var emptyUser domain.User
-	return emptyUser, nil
+	return user, nil
 }
 
 // Update updates a user
-func (r *UserRepositoryImpl) Update(ctx context.Context, tx pgx.Tx, user domain.User) (domain.User, error) {
+func (r *UserRepositoryImpl) Update(ctx context.Context, dbpool *pgxpool.Pool, user domain.User) (domain.User, error) {
 	var emptyUser domain.User
 	return emptyUser, nil
 }
 
 // Delete deletes a user
-func (r *UserRepositoryImpl) Delete(ctx context.Context, tx pgx.Tx,id int64) error {
+func (r *UserRepositoryImpl) Delete(ctx context.Context, dbpool *pgxpool.Pool, id int64) error {
 	return nil
 }
 
 // UpdateStatus updates a user status
-func (r *UserRepositoryImpl) UpdateStatus(ctx context.Context, tx pgx.Tx, id int64, status bool) error {
+func (r *UserRepositoryImpl) UpdateStatus(ctx context.Context, dbpool *pgxpool.Pool, id int64, status bool) error {
 	return nil
 }
 
 // UpdatePassword updates a user password
-func (r *UserRepositoryImpl) UpdatePassword(ctx context.Context, tx pgx.Tx, id int64, password string) error {
+func (r *UserRepositoryImpl) UpdatePassword(ctx context.Context, dbpool *pgxpool.Pool, id int64, password string) error {
+	return nil
+}
+
+func (r *UserRepositoryImpl) MatchPassword(ctx context.Context, dbpool *pgxpool.Pool, id int64, password string) error {
+	var userPassword string
+
+	script := "SELECT password FROM user_person WHERE id_user = $1"
+
+	tx, err := dbpool.Begin(ctx)
+	helper.PanicIfError(err)
+
+	err = tx.QueryRow(ctx, script, id).Scan(&userPassword)
+	helper.PanicIfError(err)
+
+	hashedPassword, err := helper.HashPassword(password)
+	helper.PanicIfError(err)
+
+	// compare password
+	if userPassword != hashedPassword {
+		return err
+	}
+
 	return nil
 }

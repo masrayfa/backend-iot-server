@@ -3,6 +3,7 @@ package database
 import (
 	"context"
 	"fmt"
+	"log"
 	"os"
 	"time"
 
@@ -18,7 +19,7 @@ func init() {
 }
 
 func NewDBPool() *pgxpool.Pool {
-	fmt.Println("ini database url", databaseUrl)
+	fmt.Println("ini database url di new database.go", databaseUrl)
 
 	config, err := pgxpool.ParseConfig(databaseUrl)
 	config.MinConns = 5
@@ -29,18 +30,17 @@ func NewDBPool() *pgxpool.Pool {
 	dbpool, err := pgxpool.NewWithConfig(context.Background(), config)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Unable to connect to database: %v\n", err)
-		os.Exit(1)
+		return nil
 	}
-	defer dbpool.Close()
 
-	var greeting string
-	err = dbpool.QueryRow(context.Background(), "select 'Hello, world!'").Scan(&greeting)
+	// Check connection
+	err = dbpool.Ping(context.Background())
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "QueryRow failed: %v\n", err)
-		os.Exit(1)
+		fmt.Fprintf(os.Stderr, "Unable to connect to database: %v\n", err)
+		dbpool.Close()
+		return nil
 	}
 
-	fmt.Println(greeting)
-
+	log.Println("Database connected")
 	return dbpool
 }
