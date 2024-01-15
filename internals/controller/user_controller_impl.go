@@ -21,7 +21,16 @@ func NewUserController(userService service.UserService) UserController {
 }
 
 func (controller *UserControllerImpl) FindAll(writer http.ResponseWriter, request *http.Request, params httprouter.Params) {
-	panic("unimplemented")
+	user, err := controller.userService.FindAll(request.Context())
+	helper.PanicIfError(err)
+
+	webReponse := web.WebResponse {
+		Code: http.StatusOK,
+		Status: http.StatusText(http.StatusOK),
+		Data: user,
+	}
+
+	helper.WriteToResponseBody(writer, webReponse)
 }
 
 func (controller *UserControllerImpl) Register(writer http.ResponseWriter, request *http.Request, params httprouter.Params) {

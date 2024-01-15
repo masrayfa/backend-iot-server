@@ -20,7 +20,25 @@ func NewUserRepository() UserRepository {
 
 // FindAll returns all users
 func (r *UserRepositoryImpl) FindAll(ctx context.Context, dbpool *pgxpool.Pool) ([]domain.User, error) {
-	return nil, nil
+	tx, err := dbpool.Begin(ctx)
+	helper.PanicIfError(err)
+
+	script := "SELECT id_user, email, username, status, token, isAdmin from user_person"
+
+	rows, err := tx.Query(ctx, script)
+	helper.PanicIfError(err)
+	defer rows.Close()
+
+	var users []domain.User
+	for rows.Next() {
+		var user domain.User
+		err = rows.Scan(&user.IdUser, &user.Email, &user.Username, &user.Status, &user.Token, &user.IsAdmin)
+		helper.PanicIfError(err)
+
+		users = append(users, user)
+	}
+
+	return users, nil
 }
 
 // FindById returns a user by id
@@ -50,7 +68,6 @@ func (r *UserRepositoryImpl) FindByUsername(ctx context.Context, dbpool *pgxpool
 	helper.PanicIfError(err)
 
 	return user, nil
-
 }
 
 // FindByToken returns a user by token

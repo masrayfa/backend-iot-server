@@ -32,7 +32,27 @@ func NewUserService(userRepository repository.UserRepository, db *pgxpool.Pool, 
 }
 
 func (service *UserServiceImpl) FindAll(ctx context.Context) ([]web.UserReadResponse, error) {
-	panic("unimplemented")
+	err := service.validate.Struct(ctx)
+	helper.PanicIfError(err)
+
+	dbpool := service.db
+
+	users, err := service.userRepository.FindAll(ctx, dbpool)
+	helper.PanicIfError(err)
+
+	var userResponses []web.UserReadResponse
+	for _, user := range users {
+		userResponses = append(userResponses, web.UserReadResponse{
+			IdUser: user.IdUser,
+			Username: user.Username,
+			Email: user.Email,
+			Status: user.Status,
+			Token: user.Token,
+			IsAdmin: user.IsAdmin,
+		})
+	}
+
+	return userResponses, nil
 }
 
 func (service *UserServiceImpl) Register(ctx context.Context, req web.UserCreateRequest) (web.UserReadResponse, error) {
