@@ -38,10 +38,19 @@ func (r *UserRepositoryImpl) FindByEmail(ctx context.Context, dbpool *pgxpool.Po
 
 // FindByUsername returns a user by username
 func (r *UserRepositoryImpl) FindByUsername(ctx context.Context, dbpool *pgxpool.Pool, username string) (domain.User, error) {
+	tx, err := dbpool.Begin(ctx)
+	helper.PanicIfError(err)
 
+	script := "SELECT id_user, email, username, status, token, isAdmin from user_person WHERE username = $1"
 
-	var emptyUser domain.User
-	return emptyUser, nil
+	rows := tx.QueryRow(ctx, script, username)
+
+	var user domain.User
+	err = rows.Scan(&user.IdUser, &user.Email, &user.Username, &user.Status, &user.Token, &user.IsAdmin)
+	helper.PanicIfError(err)
+
+	return user, nil
+
 }
 
 // FindByToken returns a user by token
@@ -56,14 +65,6 @@ func (r *UserRepositoryImpl) Save(ctx context.Context, dbpool *pgxpool.Pool, use
 	status := false
 	isAdmin := false
 
-	// h := sha256.New()
-	// _, err := h.Write([]byte(user.Password))
-	// if err != nil {
-	// 	return user, err
-	// }
-
-	// hashedBytes := h.Sum(nil)
-	// hashedString := hex.EncodeToString(hashedBytes)
 	hashedPassword, err := helper.HashPassword(user.Password)
 
 	tx, err := dbpool.Begin(ctx)
