@@ -17,6 +17,7 @@ func NewUserRouter(userController controller.UserController) *httprouter.Router 
 	// users endpoint
 	router.POST("/register", userController.Register)
 	router.POST("/login", userController.Login)
+	router.GET("/", userController.FindAll)
 
 	return router
 }

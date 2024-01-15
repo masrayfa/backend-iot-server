@@ -34,6 +34,7 @@ func main() {
 	userRouter := NewUserRouter(userController)
 
 	mainRouter.Handler("POST", "/api/v1/user/*path", http.StripPrefix("/api/v1/user", userRouter))
+	mainRouter.Handler("GET", "/api/v1/user/*path", http.StripPrefix("/api/v1/user", userRouter))
 
 	server := http.Server {
 		Addr: ":8080",
