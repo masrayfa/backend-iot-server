@@ -43,8 +43,16 @@ func (r *UserRepositoryImpl) FindAll(ctx context.Context, dbpool *pgxpool.Pool) 
 
 // FindById returns a user by id
 func (r *UserRepositoryImpl) FindById(ctx context.Context, dbpool *pgxpool.Pool, id int64) (domain.User, error) {
-	var emptyUser domain.User
-	return emptyUser, nil
+	tx, err := dbpool.Begin(ctx)
+	helper.PanicIfError(err)
+
+	script := "SELECT id_user, email, username, status, token, isAdmin FROM user_person WHERE id_user = $1"
+
+	var user domain.User
+	err = tx.QueryRow(ctx, script, id).Scan(&user.IdUser, &user.Email, &user.Username, &user.Status, &user.Token, &user.IsAdmin)
+	helper.PanicIfError(err)
+
+	return user, nil
 }
 
 // FindByEmail returns a user by email

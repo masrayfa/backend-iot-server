@@ -3,6 +3,7 @@ package controller
 import (
 	"log"
 	"net/http"
+	"strconv"
 
 	"github.com/julienschmidt/httprouter"
 	"github.com/masrayfa/internals/helper"
@@ -22,6 +23,23 @@ func NewUserController(userService service.UserService) UserController {
 
 func (controller *UserControllerImpl) FindAll(writer http.ResponseWriter, request *http.Request, params httprouter.Params) {
 	user, err := controller.userService.FindAll(request.Context())
+	helper.PanicIfError(err)
+
+	webReponse := web.WebResponse {
+		Code: http.StatusOK,
+		Status: http.StatusText(http.StatusOK),
+		Data: user,
+	}
+
+	helper.WriteToResponseBody(writer, webReponse)
+}
+
+func (controller *UserControllerImpl) FindById(writer http.ResponseWriter, request *http.Request, params httprouter.Params) {
+	param := params.ByName("id")	
+	userId, err := strconv.ParseInt(param, 10, 64)
+	helper.PanicIfError(err)
+
+	user, err := controller.userService.FindById(request.Context(), userId)
 	helper.PanicIfError(err)
 
 	webReponse := web.WebResponse {

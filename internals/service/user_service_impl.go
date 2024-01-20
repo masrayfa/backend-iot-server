@@ -55,6 +55,27 @@ func (service *UserServiceImpl) FindAll(ctx context.Context) ([]web.UserReadResp
 	return userResponses, nil
 }
 
+func (service *UserServiceImpl) FindById(ctx context.Context, id int64) (web.UserReadResponse, error) {
+	err := service.validate.Struct(ctx)
+	helper.PanicIfError(err)
+
+	dbpool := service.db
+
+	user, err := service.userRepository.FindById(ctx, dbpool, id)
+	helper.PanicIfError(err)
+
+	userResponse := web.UserReadResponse {
+		IdUser: user.IdUser,
+		Username: user.Username,
+		Email: user.Email,
+		Status: user.Status,
+		Token: user.Token,
+		IsAdmin: user.IsAdmin,
+	}
+
+	return userResponse, nil
+}
+
 func (service *UserServiceImpl) Register(ctx context.Context, req web.UserCreateRequest) (web.UserReadResponse, error) {
 	// validate request
 	err := service.validate.Struct(req)
