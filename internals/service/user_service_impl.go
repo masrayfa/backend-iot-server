@@ -145,8 +145,40 @@ func (service *UserServiceImpl) ForgotPassword(ctx context.Context,req web.UserF
 	panic("unimplemented")
 }
 
+func (service *UserServiceImpl) MatchPassword(ctx context.Context,id int64, password string) error {
+	err := service.validate.Struct(ctx)
+	helper.PanicIfError(err)
+
+	dbpool := service.db
+	helper.PanicIfError(err)
+
+	user, err := service.userRepository.FindById(ctx, dbpool, id)
+	helper.PanicIfError(err)
+
+	// // compare password
+	err = service.userRepository.MatchPassword(ctx, dbpool, user.IdUser, password)
+	if err != nil {
+		http.Error(nil, "Invalid password", http.StatusBadRequest)
+		panic(err)
+	}
+
+	return nil
+}
+
 func (service *UserServiceImpl) UpdatePassword(ctx context.Context,id int64, password string) error {
-	panic("unimplemented")
+	err := service.validate.Struct(ctx)
+	helper.PanicIfError(err)
+
+	dbpool := service.db
+	helper.PanicIfError(err)
+
+	// update password
+	err = service.userRepository.UpdatePassword(ctx, dbpool, id, password)
+	helper.PanicIfError(err)
+
+	log.Println("password berhasil diupdate")
+
+	return nil
 }
 
 func (service *UserServiceImpl) UpdateStatus(ctx context.Context,id int64, status bool) error {

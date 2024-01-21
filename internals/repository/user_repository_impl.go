@@ -2,6 +2,8 @@ package repository
 
 import (
 	"context"
+	"fmt"
+	"net/http"
 
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5/pgxpool"
@@ -123,8 +125,7 @@ func (r *UserRepositoryImpl) Save(ctx context.Context, dbpool *pgxpool.Pool, use
 
 // Update updates a user
 func (r *UserRepositoryImpl) Update(ctx context.Context, dbpool *pgxpool.Pool, user domain.User) (domain.User, error) {
-	var emptyUser domain.User
-	return emptyUser, nil
+	panic("unimplemented")
 }
 
 // Delete deletes a user
@@ -139,6 +140,21 @@ func (r *UserRepositoryImpl) UpdateStatus(ctx context.Context, dbpool *pgxpool.P
 
 // UpdatePassword updates a user password
 func (r *UserRepositoryImpl) UpdatePassword(ctx context.Context, dbpool *pgxpool.Pool, id int64, password string) error {
+	tx, err := dbpool.Begin(ctx)
+	defer helper.CommitOrRollback(ctx, tx)
+
+	script := "UPDATE user_person SET password = $1 WHERE id_user = $2"
+
+	hashedPassword, err := helper.HashPassword(password)
+
+	res, err := tx.Exec(ctx, script, hashedPassword, id)
+	helper.PanicIfError(err)
+
+	if res.RowsAffected() != 1 {
+		http.Error(nil, fmt.Sprintf("No row affected on update user password with id: %d", id), http.StatusBadRequest)
+		return err
+	}
+
 	return nil
 }
 

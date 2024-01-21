@@ -95,7 +95,26 @@ func (controller *UserControllerImpl) ForgotPassword(writer http.ResponseWriter,
 }
 
 func (controller *UserControllerImpl) UpdatePassword(writer http.ResponseWriter, request *http.Request, params httprouter.Params) {
-	panic("unimplemented")
+	updateRequest:= web.UserUpdatePasswordRequest{}
+	helper.ReadFromRequestBody(request, &updateRequest)
+
+	param := params.ByName("id")
+	userId, err := strconv.ParseInt(param, 10, 64)
+	helper.PanicIfError(err)
+
+	err = controller.userService.MatchPassword(request.Context(), userId, updateRequest.OldPassword)
+	helper.PanicIfError(err)
+
+	err = controller.userService.UpdatePassword(request.Context(), userId, updateRequest.NewPassword)
+	helper.PanicIfError(err)
+
+	webReponse := web.WebResponse {
+		Code: http.StatusOK,
+		Status: http.StatusText(http.StatusOK),
+		Data: nil,
+	}
+
+	helper.WriteToResponseBody(writer, webReponse)
 }
 
 func (controller *UserControllerImpl) UpdateStatus(writer http.ResponseWriter, request *http.Request, params httprouter.Params) {

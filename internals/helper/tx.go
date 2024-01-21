@@ -3,10 +3,10 @@ package helper
 import (
 	"context"
 
-	"github.com/jackc/pgx/v5/pgxpool"
+	"github.com/jackc/pgx/v5"
 )
 
-func CommitOrRollback(ctx context.Context, tx *pgxpool.Tx ) {
+func CommitOrRollback(ctx context.Context, tx pgx.Tx) {
 	err := recover()
 	if err != nil {
 		err := tx.Rollback(ctx)
