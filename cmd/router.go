@@ -19,6 +19,7 @@ func NewUserRouter(userController controller.UserController) *httprouter.Router 
 	router.POST("/login", userController.Login)
 	router.GET("/", userController.FindAll)
 	router.GET("/:id", userController.FindById)
+	router.PUT("/:id", userController.UpdatePassword)
 
 	return router
 }
