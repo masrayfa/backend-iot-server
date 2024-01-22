@@ -6,3 +6,13 @@ type Hardware struct {
 	Type        string `json:"type"`
 	Description string `json:"description"`
 }
+
+type HardwareWithSensor struct {
+	Hardware Hardware
+	Sensors  []Sensor
+}
+
+type HardwareWithNode struct {
+	Hardware Hardware
+	Nodes    []Node
+}
