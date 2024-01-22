@@ -122,5 +122,17 @@ func (controller *UserControllerImpl) UpdateStatus(writer http.ResponseWriter, r
 }
 
 func (controller *UserControllerImpl) Delete(writer http.ResponseWriter, request *http.Request, params httprouter.Params) {
-	panic("unimplemented")
+	id := params.ByName("id")
+	userId, err := strconv.Atoi(id)
+	helper.PanicIfError(err)
+
+	err = controller.userService.Delete(request.Context(), int64(userId))
+
+	webReponse := web.WebResponse {
+		Code: http.StatusOK,
+		Status: http.StatusText(http.StatusOK),
+		Data: nil,
+	}
+
+	helper.WriteToResponseBody(writer, webReponse)
 }

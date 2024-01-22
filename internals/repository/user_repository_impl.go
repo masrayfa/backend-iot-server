@@ -130,6 +130,19 @@ func (r *UserRepositoryImpl) Update(ctx context.Context, dbpool *pgxpool.Pool, u
 
 // Delete deletes a user
 func (r *UserRepositoryImpl) Delete(ctx context.Context, dbpool *pgxpool.Pool, id int64) error {
+	tx, err := dbpool.Begin(ctx)
+	defer helper.CommitOrRollback(ctx, tx)
+
+	script := "DELETE FROM user_person WHERE id_user = $1"
+
+	res, err := tx.Exec(ctx, script, id)
+	helper.PanicIfError(err)
+
+	if res.RowsAffected() != 1 {
+		http.Error(nil, fmt.Sprintf("No row affected on delete user with id: %d", id), http.StatusBadRequest)
+		return err
+	}
+
 	return nil
 }
 

@@ -185,8 +185,20 @@ func (service *UserServiceImpl) UpdateStatus(ctx context.Context,id int64, statu
 	panic("unimplemented")
 }
 
-func (service *UserServiceImpl) Delete(ctx context.Context,id int64) error {
-	panic("unimplemented")
+func (service *UserServiceImpl) Delete(ctx context.Context, id int64) error {
+	err := service.validate.Struct(ctx)
+	helper.PanicIfError(err)
+
+	dbpool := service.db
+	helper.PanicIfError(err)
+
+	// delete user
+	err = service.userRepository.Delete(ctx, dbpool, id)
+	helper.PanicIfError(err)
+
+	log.Println("user berhasil dihapus")
+
+	return nil
 }
 
 func SignUserToken(user domain.User) (string, error) {
