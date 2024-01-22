@@ -35,7 +35,7 @@ func (service *HardwareServiceImpl) Create(ctx context.Context, req web.Hardware
 	panic("implement me")
 }
 
-func (service *HardwareServiceImpl) Update(ctx context.Context, req web.HardwareUpdateRequest) (web.HardwareReadResponse, error) {
+func (service *HardwareServiceImpl) Update(ctx context.Context, req web.HardwareUpdateRequest, id int64) (web.HardwareReadResponse, error) {
 	panic("implement me")
 }
 
