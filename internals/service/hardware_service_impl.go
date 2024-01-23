@@ -6,6 +6,7 @@ import (
 	"github.com/go-playground/validator"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/masrayfa/internals/helper"
+	"github.com/masrayfa/internals/models/domain"
 	"github.com/masrayfa/internals/models/web"
 	"github.com/masrayfa/internals/repository"
 )
@@ -67,7 +68,34 @@ func (service *HardwareServiceImpl) FindById(ctx context.Context,id int64) (web.
 }
 
 func (service *HardwareServiceImpl) Create(ctx context.Context, req web.HardwareCreateRequest) (web.HardwareReadResponse, error) {
-	panic("implement me")
+	// validate request
+	err := service.validate.Struct(req)
+	helper.PanicIfError(err)
+
+	// establish db connection
+	dbpool := service.db
+
+	// create domain object
+	hardware := domain.Hardware {
+		Name: req.Name,
+		Type: req.Type,
+		Description: req.Description,
+	}
+
+	// insert to db
+	hardware, err = service.repository.Create(ctx, dbpool, hardware)
+	helper.PanicIfError(err)
+
+	// convert to web response
+	hardwareResponse := web.HardwareReadResponse {
+		IdHardware: int64(hardware.IdHardware),
+		Name: hardware.Name,
+		Type: hardware.Type,
+		Description: hardware.Description,
+	}
+
+	// return web response
+	return hardwareResponse, nil
 }
 
 func (service *HardwareServiceImpl) Update(ctx context.Context, req web.HardwareUpdateRequest, id int64) (web.HardwareReadResponse, error) {

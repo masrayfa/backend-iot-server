@@ -81,6 +81,10 @@ func (service *UserServiceImpl) Register(ctx context.Context, req web.UserCreate
 	err := service.validate.Struct(req)
 	helper.PanicIfError(err)
 
+	// establish db connection
+	dbpool := service.db
+
+	// create user object
 	user := domain.User {
 		Username: req.Username,
 		Email: req.Email,
@@ -88,19 +92,22 @@ func (service *UserServiceImpl) Register(ctx context.Context, req web.UserCreate
 	}
 
 	// save user
-	res, err := service.userRepository.Save(ctx, service.db, user)
+	res, err := service.userRepository.Save(ctx, dbpool, user)
 	helper.PanicIfError(err)
 	fmt.Println("res", res)
 
-	// return response
-	return web.UserReadResponse{
+	// convert user to user response
+	userResponse := web.UserReadResponse {
 		IdUser: res.IdUser,
 		Username: res.Username,
 		Email: res.Email,
 		Status: res.Status,
 		Token: res.Token,
 		IsAdmin: res.IsAdmin,
-	}, nil
+	}
+
+	// return response
+	return userResponse, nil
 }
 
 func (service *UserServiceImpl) Login(ctx context.Context, req web.UserLoginRequest) (web.UserReadResponse, error) {
@@ -108,6 +115,7 @@ func (service *UserServiceImpl) Login(ctx context.Context, req web.UserLoginRequ
 	err := service.validate.Struct(req)
 	helper.PanicIfError(err)
 
+	// establish db connection
 	dbpool := service.db
 
 	// find user by username
