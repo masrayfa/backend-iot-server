@@ -2,6 +2,7 @@ package service
 
 import (
 	"context"
+	"log"
 
 	"github.com/go-playground/validator"
 	"github.com/jackc/pgx/v5/pgxpool"
@@ -98,8 +99,25 @@ func (service *HardwareServiceImpl) Create(ctx context.Context, req web.Hardware
 	return hardwareResponse, nil
 }
 
-func (service *HardwareServiceImpl) Update(ctx context.Context, req web.HardwareUpdateRequest, id int64) (web.HardwareReadResponse, error) {
-	panic("implement me")
+func (service *HardwareServiceImpl) Update(ctx context.Context, req web.HardwareUpdateRequest, id int64) error {
+	err := service.validate.Struct(req)
+	helper.PanicIfError(err)
+
+	dbpool := service.db
+
+	hardware := domain.Hardware {
+		IdHardware: int64(id),
+		Name: req.Name,
+		Type: req.Type,
+		Description: req.Description,
+	}
+
+	err = service.repository.Update(ctx, dbpool, hardware)
+	helper.PanicIfError(err)
+
+	log.Println("Hardware with id: ", hardware.IdHardware, " has been updated")
+
+	return nil
 }
 
 func (service *HardwareServiceImpl) Delete(ctx context.Context, id int64) error {

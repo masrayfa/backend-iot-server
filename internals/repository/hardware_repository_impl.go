@@ -12,7 +12,7 @@ import (
 type HardwareRepositoryImpl struct {
 }
 
-func NewHardwareRepositoryImpl() HardwareRepository {
+func NewHardwareRepository() HardwareRepository {
 	return &HardwareRepositoryImpl{}
 }
 
@@ -118,7 +118,7 @@ func (r *HardwareRepositoryImpl) Create(ctx context.Context, pool *pgxpool.Pool,
 	return hardware, nil
 }
 
-func (r *HardwareRepositoryImpl) Update(ctx context.Context, pool *pgxpool.Pool , hardware domain.Hardware) error {
+func (r *HardwareRepositoryImpl) Update(ctx context.Context, pool *pgxpool.Pool, hardware domain.Hardware) error {
 	tx, err := pool.Begin(ctx)
 	helper.PanicIfError(err)
 	defer helper.CommitOrRollback(ctx, tx)

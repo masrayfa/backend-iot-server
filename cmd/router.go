@@ -24,3 +24,16 @@ func NewUserRouter(userController controller.UserController) *httprouter.Router 
 
 	return router
 }
+
+func NewHardwareRouter(hardwareController controller.HardwareController) *httprouter.Router {
+	router := httprouter.New()
+
+	// hardwares endpoint
+	router.GET("/", hardwareController.FindAll)
+	router.GET("/:id", hardwareController.FindById)
+	router.POST("/", hardwareController.Create)
+	router.PUT("/:id", hardwareController.Update)
+	router.DELETE("/:id", hardwareController.Delete)
+
+	return router
+}

@@ -74,13 +74,13 @@ func (c *HardwareControllerImpl) Update(writer http.ResponseWriter, request *htt
 	hardwareRequest := web.HardwareUpdateRequest{}
 	helper.ReadFromRequestBody(request, &hardwareRequest)
 
-	hardwareResponse, err := c.service.Update(request.Context(), hardwareRequest, id)
+	err = c.service.Update(request.Context(), hardwareRequest, id)
 	helper.PanicIfError(err)
 
 	webResponse := web.WebResponse{
 		Code: http.StatusOK,
 		Status: http.StatusText(http.StatusOK),
-		Data: hardwareResponse,
+		Data: nil,
 	}
 
 	helper.WriteToResponseBody(writer, webResponse)
