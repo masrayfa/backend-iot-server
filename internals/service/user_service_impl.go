@@ -31,7 +31,7 @@ func NewUserService(userRepository repository.UserRepository, db *pgxpool.Pool, 
 	}
 }
 
-func (service *UserServiceImpl) FindAll(ctx context.Context) ([]web.UserReadResponse, error) {
+func (service *UserServiceImpl) FindAll(ctx context.Context) ([]web.UserRead, error) {
 	err := service.validate.Struct(ctx)
 	helper.PanicIfError(err)
 
@@ -40,9 +40,9 @@ func (service *UserServiceImpl) FindAll(ctx context.Context) ([]web.UserReadResp
 	users, err := service.userRepository.FindAll(ctx, dbpool)
 	helper.PanicIfError(err)
 
-	var userResponses []web.UserReadResponse
+	var userResponses []web.UserRead
 	for _, user := range users {
-		userResponses = append(userResponses, web.UserReadResponse{
+		userResponses = append(userResponses, web.UserRead {
 			IdUser: user.IdUser,
 			Username: user.Username,
 			Email: user.Email,
@@ -55,7 +55,7 @@ func (service *UserServiceImpl) FindAll(ctx context.Context) ([]web.UserReadResp
 	return userResponses, nil
 }
 
-func (service *UserServiceImpl) FindById(ctx context.Context, id int64) (web.UserReadResponse, error) {
+func (service *UserServiceImpl) FindById(ctx context.Context, id int64) (web.UserRead, error) {
 	err := service.validate.Struct(ctx)
 	helper.PanicIfError(err)
 
@@ -64,7 +64,7 @@ func (service *UserServiceImpl) FindById(ctx context.Context, id int64) (web.Use
 	user, err := service.userRepository.FindById(ctx, dbpool, id)
 	helper.PanicIfError(err)
 
-	userResponse := web.UserReadResponse {
+	userResponse := web.UserRead {
 		IdUser: user.IdUser,
 		Username: user.Username,
 		Email: user.Email,
@@ -76,7 +76,7 @@ func (service *UserServiceImpl) FindById(ctx context.Context, id int64) (web.Use
 	return userResponse, nil
 }
 
-func (service *UserServiceImpl) Register(ctx context.Context, req web.UserCreateRequest) (web.UserReadResponse, error) {
+func (service *UserServiceImpl) Register(ctx context.Context, req web.UserCreateRequest) (web.UserRead, error) {
 	// validate request
 	err := service.validate.Struct(req)
 	helper.PanicIfError(err)
@@ -97,7 +97,7 @@ func (service *UserServiceImpl) Register(ctx context.Context, req web.UserCreate
 	fmt.Println("res", res)
 
 	// convert user to user response
-	userResponse := web.UserReadResponse {
+	userResponse := web.UserRead {
 		IdUser: res.IdUser,
 		Username: res.Username,
 		Email: res.Email,
@@ -110,7 +110,7 @@ func (service *UserServiceImpl) Register(ctx context.Context, req web.UserCreate
 	return userResponse, nil
 }
 
-func (service *UserServiceImpl) Login(ctx context.Context, req web.UserLoginRequest) (web.UserReadResponse, error) {
+func (service *UserServiceImpl) Login(ctx context.Context, req web.UserLoginRequest) (web.UserRead, error) {
 	// validate request
 	err := service.validate.Struct(req)
 	helper.PanicIfError(err)
@@ -135,7 +135,7 @@ func (service *UserServiceImpl) Login(ctx context.Context, req web.UserLoginRequ
 	helper.PanicIfError(err)
 
 	// return response
-	return web.UserReadResponse{
+	return web.UserRead {
 		IdUser: user.IdUser,
 		Username: user.Username,
 		Email: user.Email,

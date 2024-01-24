@@ -1,6 +1,6 @@
 package web
 
-type UserReadResponse struct {
+type UserRead struct {
 	IdUser   int64  `json:"id_user"`
 	Username string `json:"username"`
 	Email    string `json:"email"`
