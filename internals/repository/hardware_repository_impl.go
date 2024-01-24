@@ -118,6 +118,7 @@ func (r *HardwareRepositoryImpl) Create(ctx context.Context, pool *pgxpool.Pool,
 	return hardware, nil
 }
 
+// todo: fix updat
 func (r *HardwareRepositoryImpl) Update(ctx context.Context, pool *pgxpool.Pool, hardware domain.Hardware) error {
 	tx, err := pool.Begin(ctx)
 	helper.PanicIfError(err)

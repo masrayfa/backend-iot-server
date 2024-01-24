@@ -105,14 +105,31 @@ func (service *HardwareServiceImpl) Update(ctx context.Context, req web.Hardware
 
 	dbpool := service.db
 
-	hardware := domain.Hardware {
-		IdHardware: int64(id),
-		Name: req.Name,
-		Type: req.Type,
-		Description: req.Description,
+	hardware, err := service.repository.FindById(ctx, dbpool, id)
+	helper.PanicIfError(err)
+
+	if req.Name != "" {
+		hardware.Name = req.Name
 	}
 
-	err = service.repository.Update(ctx, dbpool, hardware)
+	if req.Type != "" {
+		hardware.Type = req.Type
+	}
+
+	if req.Description != "" {
+		hardware.Description = req.Description
+	}
+
+	hardwareDomain := domain.Hardware(hardware)
+
+	// hardwareDomain := domain.Hardware {
+	// 	IdHardware: int64(id),
+	// 	Name: req.Name,
+	// 	Type: req.Type,
+	// 	Description: req.Description,
+	// }
+
+	err = service.repository.Update(ctx, dbpool, hardwareDomain)
 	helper.PanicIfError(err)
 
 	log.Println("Hardware with id: ", hardware.IdHardware, " has been updated")
