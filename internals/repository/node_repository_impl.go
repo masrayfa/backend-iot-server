@@ -44,7 +44,7 @@ func (n *NodeRepositoryImpl) FindAll(ctx context.Context, pool *pgxpool.Pool, cu
 
 	for rows.Next() {
 		var node domain.Node
-		err := rows.Scan(&node.IdNode, &node.Name, &node.Location, &node.IdUser, &node.IdHardware)
+		err := rows.Scan(&node.IdNode, &node.Name, &node.Location, &node.IdUser, &node.IdHardwareNode)
 		if err != nil {
 			return nil, err
 		}
@@ -66,7 +66,7 @@ func (n *NodeRepositoryImpl) FindById(ctx context.Context, pool *pgxpool.Pool, i
 
 	script := "SELECT * FROM node WHERE id = $1"
 
-	err = tx.QueryRow(ctx, script, id).Scan(&node.IdNode, &node.Name, &node.Location, &node.IdUser, &node.IdHardware)
+	err = tx.QueryRow(ctx, script, id).Scan(&node.IdNode, &node.Name, &node.Location, &node.IdUser, &node.IdHardwareNode)
 	if err != nil {
 		return node, err
 	}
@@ -90,7 +90,7 @@ func (n *NodeRepositoryImpl) GetHardwareNode(ctx context.Context, pool *pgxpool.
 
 	for rows.Next() {
 		var node domain.Node
-		err := rows.Scan(&node.IdNode, &node.Name, &node.Location, &node.IdUser, &node.IdHardware)
+		err := rows.Scan(&node.IdNode, &node.Name, &node.Location, &node.IdUser, &node.IdHardwareNode)
 		if err != nil {
 			return nil, err
 		}
@@ -115,14 +115,14 @@ func (n *NodeRepositoryImpl) Create(ctx context.Context, pool *pgxpool.Pool, nod
 		Name: nodePayload.Name,
 		Location: nodePayload.Location,
 		IdUser: currentUser.IdUser,
-		IdHardware: nodePayload.IdHardware,
+		IdHardwareNode: nodePayload.IdHardwareNode,
 	}
 
 	// sql script
 	script := "INSERT INTO node (name, location, id_user, id_hardware) VALUES ($1, $2, $3, $4)"
 
 	// insert node
-	_, err = tx.Exec(ctx, script, node.Name, node.Location, node.IdUser, node.IdHardware)
+	_, err = tx.Exec(ctx, script, node.Name, node.Location, node.IdUser, node.IdHardwareNode)
 	if err != nil {
 		return node, err
 	}
