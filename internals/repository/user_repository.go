@@ -9,7 +9,7 @@ import (
 
 type UserRepository interface {
 	FindAll(ctx context.Context, dbpool *pgxpool.Pool) ([]domain.User, error)
-	FindById(ctx context.Context, dbpool *pgxpool.Pool, id int64) (domain.User, error)
+	FindById(ctx context.Context, dbpool *pgxpool.Pool, id int64) (domain.UserRead, error)
 	FindByEmail(ctx context.Context, dbpool *pgxpool.Pool, email string) (domain.User, error)
 	FindByUsername(ctx context.Context, dbpool *pgxpool.Pool, username string) (domain.User, error)
 	FindByToken(ctx context.Context, dbpool *pgxpool.Pool, token string) (domain.User, error)

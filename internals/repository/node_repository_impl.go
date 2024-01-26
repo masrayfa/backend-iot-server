@@ -105,7 +105,7 @@ func (n *NodeRepositoryImpl) GetHardwareNode(ctx context.Context, pool *pgxpool.
 	return nodes, nil
 }
 
-func (n *NodeRepositoryImpl) Create(ctx context.Context, pool *pgxpool.Pool, nodePayload domain.Node, currentUser *web.UserRead) (domain.Node, error) {
+func (n *NodeRepositoryImpl) Create(ctx context.Context, pool *pgxpool.Pool, nodePayload domain.Node, currentUser *domain.UserRead) (domain.Node, error) {
 	tx, err := pool.Begin(ctx)
 	helper.PanicIfError(err)
 	defer helper.CommitOrRollback(ctx, tx)

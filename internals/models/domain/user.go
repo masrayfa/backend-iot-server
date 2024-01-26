@@ -9,3 +9,12 @@ type User struct {
 	Token    string
 	IsAdmin  bool
 }
+
+type UserRead struct {
+	IdUser   int64
+	Username string
+	Email    string
+	Status   bool
+	Token    string
+	IsAdmin  bool
+}

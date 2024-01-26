@@ -106,6 +106,20 @@ func (r *HardwareRepositoryImpl) FindById(ctx context.Context, pool *pgxpool.Poo
 	return hardware, nil
 }
 
+func (r *HardwareRepositoryImpl) FindHardwareTypeById(ctx context.Context, pool *pgxpool.Pool , id int64) (string, error) {
+	script := "SELECT type FROM hardware WHERE id_hardware = $1"
+	
+	tx, err := pool.Begin(ctx)
+	helper.PanicIfError(err)
+	defer helper.CommitOrRollback(ctx, tx)
+
+	var hardwareType string
+	err = tx.QueryRow(ctx, script, id).Scan(&hardwareType)
+	helper.PanicIfError(err)
+
+	return hardwareType, nil
+}
+
 func (r *HardwareRepositoryImpl) Create(ctx context.Context, pool *pgxpool.Pool, hardware domain.Hardware) (domain.Hardware, error) {
 	tx, err := pool.Begin(ctx)
 	helper.PanicIfError(err)
