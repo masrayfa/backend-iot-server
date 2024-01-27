@@ -184,8 +184,27 @@ func (service *NodeServiceImpl) Create(ctx context.Context, req web.NodeCreateRe
 	return nodeCreateRes, nil	
 }
 
-func (service *NodeServiceImpl) Update(ctx context.Context,req web.NodeUpdateRequest, id int64) error {
-	panic("implement me")
+func (service *NodeServiceImpl) Update(ctx context.Context, req web.NodeUpdateRequest, id int64) error {
+	// validate request
+	err := service.validator.Struct(ctx)
+	helper.PanicIfError(err)
+
+	// establish db connection
+	dbpool := service.db
+
+	// get node
+	node, err := service.repository.FindById(ctx, dbpool, id)
+	helper.PanicIfError(err)
+
+	// setup node payload
+	nodePayload := web.NodeUpdateRequest(req)
+	nodePayload.ChangeSettedField(&node)
+
+	// update node
+	_, err = service.repository.Update(ctx, dbpool, node, &nodePayload)
+	helper.PanicIfError(err)
+
+	return nil
 }
 
 func (service *NodeServiceImpl) Delete(ctx context.Context,id int64) error {

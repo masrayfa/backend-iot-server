@@ -8,6 +8,7 @@ import (
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/masrayfa/internals/helper"
 	"github.com/masrayfa/internals/models/domain"
+	"github.com/masrayfa/internals/models/web"
 )
 
 type NodeRepositoryImpl struct {
@@ -129,14 +130,14 @@ func (n *NodeRepositoryImpl) Create(ctx context.Context, pool *pgxpool.Pool, nod
 	return node, nil
 }
 
-func (n *NodeRepositoryImpl) Update(ctx context.Context, pool *pgxpool.Pool, node domain.Node) (domain.Node, error) {
+func (n *NodeRepositoryImpl) Update(ctx context.Context, pool *pgxpool.Pool, node domain.Node, payload *web.NodeUpdateRequest) (domain.Node, error) {
 	tx, err := pool.Begin(ctx)
 	helper.PanicIfError(err)
 	defer helper.CommitOrRollback(ctx, tx)
 
-	script := "UPDATE node SET name = $1, location = $2 WHERE id = $3"
+	script := "UPDATE node SET name = $1, location = $2, id_hardware_node = $3, id_hardware_sensor = $4, field_sensor = $5 WHERE id = $6"
 
-	res, err := tx.Exec(ctx, script, node.Name, node.Location, node.IdNode)
+	res, err := tx.Exec(ctx, script, payload.Name, payload.Location, payload.IdHardwareNode, payload.IdHardwareSensor, payload.FieldSensor, node.IdNode)
 	if err != nil {
 		return node, err
 	}
