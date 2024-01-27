@@ -8,7 +8,6 @@ import (
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/masrayfa/internals/helper"
 	"github.com/masrayfa/internals/models/domain"
-	"github.com/masrayfa/internals/models/web"
 )
 
 type NodeRepositoryImpl struct {
@@ -18,7 +17,7 @@ func NewNodeRepository() NodeRepository {
 	return &NodeRepositoryImpl{}
 }
 
-func (n *NodeRepositoryImpl) FindAll(ctx context.Context, pool *pgxpool.Pool, currentUser *web.UserRead) ([]domain.Node, error) {
+func (n *NodeRepositoryImpl) FindAll(ctx context.Context, pool *pgxpool.Pool, currentUser *domain.UserRead) ([]domain.Node, error) {
 	tx, err := pool.Begin(ctx)
 	helper.PanicIfError(err)
 

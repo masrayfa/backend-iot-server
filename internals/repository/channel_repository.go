@@ -8,5 +8,7 @@ import (
 )
 
 type ChannelRepository interface {
+	GetNodeChannel(ctx context.Context, pool *pgxpool.Pool, idNode int64, limit int64) ([]domain.Channel, error)
+	GetNodeChannelMultiple(ctx context.Context, pool *pgxpool.Pool, nodes []domain.Node, limit int64) ([]domain.NodeWithFeed, error)
 	Create(ctx context.Context, pool *pgxpool.Pool, channelPayload domain.Channel) (domain.Channel, error)
 }

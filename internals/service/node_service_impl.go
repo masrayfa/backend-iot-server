@@ -32,12 +32,59 @@ func NewNodeService(db *pgxpool.Pool, repository repository.NodeRepository, hard
 	}
 }
 
-func (service *NodeServiceImpl) FindAll(ctx context.Context) ([]domain.NodeWithFeed, error) {
-	panic("implement me")
+func (service *NodeServiceImpl) FindAll(ctx context.Context, limit int64, idUser int64) ([]domain.NodeWithFeed, error) {
+	err := service.validator.Struct(ctx)
+	helper.PanicIfError(err)
+
+	dbpool := service.db
+
+	currentUser, err := service.userRepository.FindById(ctx, dbpool, idUser)
+	helper.PanicIfError(err)
+
+	nodes, err := service.repository.FindAll(ctx, dbpool, &currentUser)
+	helper.PanicIfError(err)
+
+	// get all channel
+	nodeChannels, err := service.channelRepository.GetNodeChannelMultiple(ctx, dbpool, nodes, limit)
+	helper.PanicIfError(err)
+
+	return nodeChannels, nil
 }
 
-func (service *NodeServiceImpl) FindById(ctx context.Context,id int64) (domain.NodeWithFeed, error) {
-	panic("implement me")
+func (service *NodeServiceImpl) FindById(ctx context.Context, id int64, limit int64) (domain.NodeWithFeed, error) {
+	err := service.validator.Struct(ctx)
+	helper.PanicIfError(err)
+
+	dbpool := service.db
+
+	nodeResponseChannel := make(chan web.NodeResponse)
+
+	go func() {
+		node, err := service.repository.FindById(ctx, dbpool, id)
+		nodeResponseChannel <- web.NodeResponse{Node: node, Err: err}
+	}()
+
+	currentUser, err := service.userRepository.FindById(ctx, dbpool, id)
+	helper.PanicIfError(err)
+
+	nodeResponse := <- nodeResponseChannel
+	node := nodeResponse.Node
+	err = nodeResponse.Err
+	helper.PanicIfError(err)
+
+	if node.IdUser != currentUser.IdUser && !currentUser.IsAdmin {
+		return domain.NodeWithFeed{}, errors.New("user is not authorized")
+	}
+
+	feed, err := service.channelRepository.GetNodeChannel(ctx, dbpool, id, limit)
+	helper.PanicIfError(err)
+
+	nodeWithFeed := domain.NodeWithFeed{
+		Node: node,
+		Feed: feed,
+	}
+
+	return nodeWithFeed, nil
 }
 
 func (service *NodeServiceImpl) Create(ctx context.Context, req web.NodeCreateRequest, idUser int64) (nodeCreateRes web.NodeCreateResponse, err error) {

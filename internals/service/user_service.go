@@ -7,7 +7,7 @@ import (
 )
 
 type UserService interface {
-	FindAll(ctx context.Context ) ([]web.UserRead, error)
+	FindAll(ctx context.Context) ([]web.UserRead, error)
 	FindById(ctx context.Context, id int64) (web.UserRead, error)
 	Register(ctx context.Context,  req web.UserCreateRequest) (web.UserRead, error)
 	Login(ctx context.Context,  req web.UserLoginRequest) (web.UserRead, error)
