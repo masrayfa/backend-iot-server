@@ -208,5 +208,16 @@ func (service *NodeServiceImpl) Update(ctx context.Context, req web.NodeUpdateRe
 }
 
 func (service *NodeServiceImpl) Delete(ctx context.Context,id int64) error {
-	panic("implement me")
+	// validate request
+	err := service.validator.Struct(ctx)
+	helper.PanicIfError(err)
+
+	// establish db connection
+	dbpool := service.db
+
+	// delete node
+	err = service.repository.Delete(ctx, dbpool, id)
+	helper.PanicIfError(err)
+
+	return nil
 }
