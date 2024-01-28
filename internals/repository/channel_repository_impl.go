@@ -37,7 +37,7 @@ func (r *ChannelRepositoryImpl) Create(ctx context.Context, pool *pgxpool.Pool, 
 	return channel, nil
 }
 
-func (r *ChannelRepositoryImpl) GetNodeChannel(ctx context.Context, pool *pgxpool.Pool, idNode int64, limit int64) ([]domain.Channel, error) {
+func (r *ChannelRepositoryImpl) GetNodeChannel(ctx context.Context, pool *pgxpool.Pool, nodeId int64, limit int64) ([]domain.Channel, error) {
 	tx, err := pool.Begin(ctx)
 	helper.PanicIfError(err)
 	defer helper.CommitOrRollback(ctx, tx)

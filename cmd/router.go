@@ -37,3 +37,24 @@ func NewHardwareRouter(hardwareController controller.HardwareController) *httpro
 
 	return router
 }
+
+func NewNodeRouter(nodeController controller.NodeController) *httprouter.Router {
+	router := httprouter.New()
+
+	// nodes endpoint
+	router.GET("/", nodeController.FindAll)
+	router.GET("/:id", nodeController.FindById)
+	router.POST("/", nodeController.Create)
+	router.PUT("/:id", nodeController.Update)
+	router.DELETE("/:id", nodeController.Delete)
+
+	return router
+}
+
+func NewChannelRouter(channelController controller.ChannelController) *httprouter.Router {
+	router := httprouter.New()
+
+	// channels endpoint
+
+	return router
+}
