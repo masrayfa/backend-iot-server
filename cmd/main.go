@@ -8,6 +8,7 @@ import (
 	"github.com/julienschmidt/httprouter"
 	"github.com/masrayfa/internals/controller"
 	"github.com/masrayfa/internals/database"
+	"github.com/masrayfa/internals/dependencies"
 	"github.com/masrayfa/internals/helper"
 	"github.com/masrayfa/internals/repository"
 	"github.com/masrayfa/internals/service"
@@ -17,6 +18,7 @@ func main() {
 	dbpool := database.NewDBPool()
 
 	validate := validator.New()
+	validateDependency := dependencies.NewValidator(validate)
 
 	// Repository
 	userRepository := repository.NewUserRepository()
@@ -64,7 +66,7 @@ func main() {
 	mainRouter.Handler("PUT", "/api/v1/node/*path", http.StripPrefix("/api/v1/node", nodeRouter))
 	mainRouter.Handler("DELETE", "/api/v1/node/*path", http.StripPrefix("/api/v1/node", nodeRouter))
 	// main endpoint channels
-	mainRouter.Handler("POST", "/api/v1/channel/*path", http.StripPrefix("/api/v1/channel", channelRouter))
+	mainRouter.Handler("POST", "/api/v1/channel/*path", http.StripPrefix("/api/v1/channel", validateDependency.GetAuthentication(channelRouter)))
 
 	server := http.Server {
 		Addr: ":8080",
