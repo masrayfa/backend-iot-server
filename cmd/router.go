@@ -55,6 +55,7 @@ func NewChannelRouter(channelController controller.ChannelController) *httproute
 	router := httprouter.New()
 
 	// channels endpoint
+	router.POST("/", channelController.Create)
 
 	return router
 }

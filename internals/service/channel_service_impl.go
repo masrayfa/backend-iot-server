@@ -18,7 +18,7 @@ type ChannelServiceImpl struct {
 	validator *validator.Validate
 }
 
-func NewChannelService(db *pgxpool.Pool, repository repository.ChannelRepository, nodeRepository repository.NodeRepository, validator *validator.Validate) ChannelService {
+func NewChannelService( repository repository.ChannelRepository, nodeRepository repository.NodeRepository, db *pgxpool.Pool, validator *validator.Validate) ChannelService {
 	return &ChannelServiceImpl{
 		db: db,
 		repository: repository,

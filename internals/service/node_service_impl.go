@@ -22,7 +22,7 @@ type NodeServiceImpl struct {
 	validator *validator.Validate 
 }
 
-func NewNodeService(db *pgxpool.Pool, repository repository.NodeRepository, hardwareRepository repository.HardwareRepository, channelRepository repository.ChannelRepository, validator *validator.Validate) NodeService {
+func NewNodeService(repository repository.NodeRepository, hardwareRepository repository.HardwareRepository,  channelRepository repository.ChannelRepository, db *pgxpool.Pool, validator *validator.Validate) NodeService {
 	return &NodeServiceImpl{
 		db: db,
 		repository: repository,

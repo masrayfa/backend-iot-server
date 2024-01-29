@@ -21,14 +21,20 @@ func main() {
 	// Repository
 	userRepository := repository.NewUserRepository()
 	hardwareRepository := repository.NewHardwareRepository()
+	nodeRepository := repository.NewNodeRepository()
+	channelRepository := repository.NewChannelRepository()
 
 	// Service
 	userService := service.NewUserService(userRepository, dbpool, validate)
 	hardwareService := service.NewHardwareService(hardwareRepository, dbpool, validate)
+	nodeService := service.NewNodeService(nodeRepository, hardwareRepository, channelRepository, dbpool, validate)
+	channelService := service.NewChannelService(channelRepository, nodeRepository,dbpool, validate)
 
 	// Controller
 	userController := controller.NewUserController(userService)
 	hardwareController := controller.NewHardwareController(hardwareService)
+	nodeController := controller.NewNodeController(nodeService)
+	channelController := controller.NewChannelController(channelService)
 
 	// Router
 	mainRouter := httprouter.New()
@@ -37,6 +43,10 @@ func main() {
 	userRouter := NewUserRouter(userController)
 	// hardwares endpoint
 	hardwareRouter := NewHardwareRouter(hardwareController)
+	// nodes endpoint
+	nodeRouter := NewNodeRouter(nodeController)
+	// channels endpoint
+	channelRouter := NewChannelRouter(channelController)
 
 	// main endpoint users
 	mainRouter.Handler("POST", "/api/v1/user/*path", http.StripPrefix("/api/v1/user", userRouter))
@@ -48,6 +58,13 @@ func main() {
 	mainRouter.Handler("GET", "/api/v1/hardware/*path", http.StripPrefix("/api/v1/hardware", hardwareRouter))
 	mainRouter.Handler("PUT", "/api/v1/hardware/*path", http.StripPrefix("/api/v1/hardware", hardwareRouter))
 	mainRouter.Handler("DELETE", "/api/v1/hardware/*path", http.StripPrefix("/api/v1/hardware", hardwareRouter))
+	// main endpoint nodes
+	mainRouter.Handler("POST", "/api/v1/node/*path", http.StripPrefix("/api/v1/node", nodeRouter))
+	mainRouter.Handler("GET", "/api/v1/node/*path", http.StripPrefix("/api/v1/node", nodeRouter))
+	mainRouter.Handler("PUT", "/api/v1/node/*path", http.StripPrefix("/api/v1/node", nodeRouter))
+	mainRouter.Handler("DELETE", "/api/v1/node/*path", http.StripPrefix("/api/v1/node", nodeRouter))
+	// main endpoint channels
+	mainRouter.Handler("POST", "/api/v1/channel/*path", http.StripPrefix("/api/v1/channel", channelRouter))
 
 	server := http.Server {
 		Addr: ":8080",

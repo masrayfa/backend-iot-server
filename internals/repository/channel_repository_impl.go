@@ -13,7 +13,7 @@ import (
 type ChannelRepositoryImpl struct {
 }
 
-func NewChannelRepositoryImpl() ChannelRepository {
+func NewChannelRepository() ChannelRepository {
 	return &ChannelRepositoryImpl{}
 }
 
