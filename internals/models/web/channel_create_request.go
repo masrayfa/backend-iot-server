@@ -1,6 +1,6 @@
 package web
 
 type ChannelCreateRequest struct {
-	IdNode int64  `json:"id_node"`
-	Value  string `json:"value"`
+	IdNode int64     `json:"id_node"`
+	Value  []float64 `json:"value"`
 }

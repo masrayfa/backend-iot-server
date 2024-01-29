@@ -4,6 +4,8 @@ import (
 	"net/http"
 
 	"github.com/julienschmidt/httprouter"
+	"github.com/masrayfa/internals/helper"
+	"github.com/masrayfa/internals/models/web"
 	"github.com/masrayfa/internals/service"
 )
 
@@ -17,14 +19,18 @@ func NewChannelController(channelService service.ChannelService) ChannelControll
 	}
 }
 
-func (controller *ChannelControllerImpl) GetNodeChannel(writer http.ResponseWriter, request *http.Request, params httprouter.Params) {
-	panic("implement me")
-}
-
-func (controller *ChannelControllerImpl) GetNodeChannelMultiple(writer http.ResponseWriter, request *http.Request, params httprouter.Params) {
-	panic("implement me")
-}
-
 func (controller *ChannelControllerImpl) Create(writer http.ResponseWriter, request *http.Request, params httprouter.Params) {
-	panic("implement me")
+	channelRequest := web.ChannelCreateRequest{}
+	helper.ReadFromRequestBody(request, &channelRequest)
+
+	channelResponse, err := controller.channelService.Create(request.Context(), channelRequest)
+	helper.PanicIfError(err)
+
+	webResponse := web.WebResponse{
+		Code:   http.StatusOK,
+		Status: http.StatusText(http.StatusOK),
+		Data:   channelResponse,
+	}
+
+	helper.WriteToResponseBody(writer, webResponse)
 }
