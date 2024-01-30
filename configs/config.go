@@ -9,7 +9,6 @@ import (
 	"strings"
 
 	"github.com/joho/godotenv"
-	"github.com/masrayfa/internals/helper"
 	"github.com/spf13/viper"
 )
 
@@ -66,10 +65,14 @@ func init() {
 	configSettings.SetConfigType("json")
 
 	err = configSettings.ReadConfig(bytes.NewBuffer(configFile))
-	helper.PanicIfError(err)
+	if err != nil {
+		fmt.Println("Error reading config file")
+	}
 
 	err = configSettings.Unmarshal(&config)
-	helper.PanicIfError(err)
+	if err != nil {
+		fmt.Println("Error unmarshalling config file")
+	}
 }
 
 func GetConfig() *Config {
