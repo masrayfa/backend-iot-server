@@ -64,8 +64,23 @@ func (service *HardwareServiceImpl) FindAll(ctx context.Context) ([]web.Hardware
 
 }
 
-func (service *HardwareServiceImpl) FindById(ctx context.Context,id int64) (web.HardwareReadResponse, error) {
-	panic("implement me")
+func (service *HardwareServiceImpl) FindById(ctx context.Context, id int64) (web.HardwareReadResponse, error) {
+	err := service.validate.Struct(ctx)
+	helper.PanicIfError(err)
+
+	dbpool := service.db
+
+	hardware, err := service.repository.FindById(ctx, dbpool, id)
+	helper.PanicIfError(err)
+
+	hardwareResponse := web.HardwareReadResponse {
+		IdHardware: int64(hardware.IdHardware),
+		Name: hardware.Name,
+		Type: hardware.Type,
+		Description: hardware.Description,
+	}
+
+	return hardwareResponse, nil
 }
 
 func (service *HardwareServiceImpl) Create(ctx context.Context, req web.HardwareCreateRequest) (web.HardwareReadResponse, error) {
