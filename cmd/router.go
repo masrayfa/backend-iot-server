@@ -30,7 +30,7 @@ func NewHardwareRouter(hardwareController controller.HardwareController) *httpro
 
 	// hardwares endpoint
 	router.GET("/", hardwareController.FindAll)
-	router.GET("/:id", hardwareController.FindById)
+	router.GET("/:id", hardwareController.FindHardwareTypeById)
 	router.POST("/", hardwareController.Create)
 	router.PUT("/:id", hardwareController.Update)
 	router.DELETE("/:id", hardwareController.Delete)
@@ -44,7 +44,7 @@ func NewNodeRouter(nodeController controller.NodeController) *httprouter.Router 
 	// nodes endpoint
 	router.GET("/", nodeController.FindAll)
 	router.GET("/:id", nodeController.FindById)
-	router.POST("/", nodeController.Create)
+	router.POST("/:id", nodeController.Create)
 	router.PUT("/:id", nodeController.Update)
 	router.DELETE("/:id", nodeController.Delete)
 

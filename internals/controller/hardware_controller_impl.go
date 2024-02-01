@@ -20,6 +20,23 @@ func NewHardwareController(service service.HardwareService) HardwareController {
 	}
 }
 
+func (c *HardwareControllerImpl) FindHardwareTypeById(writer http.ResponseWriter, request *http.Request, params httprouter.Params) {
+	param := params.ByName("id")
+	id, err := strconv.ParseInt(param, 10, 64)
+	helper.PanicIfError(err)
+
+	hardwareResponse, err := c.service.FindHardwareTypeById(request.Context(), id)
+	helper.PanicIfError(err)
+
+	webResponse := web.WebResponse{
+		Code: http.StatusOK,
+		Status: http.StatusText(http.StatusOK),
+		Data: hardwareResponse,
+	}
+
+	helper.WriteToResponseBody(writer, webResponse)
+}
+
 func (c *HardwareControllerImpl) FindAll(writer http.ResponseWriter, request *http.Request, params httprouter.Params) {
 	hardwareResponse, err := c.service.FindAll(request.Context())
 	helper.PanicIfError(err)

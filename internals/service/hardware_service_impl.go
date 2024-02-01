@@ -83,6 +83,18 @@ func (service *HardwareServiceImpl) FindById(ctx context.Context, id int64) (web
 	return hardwareResponse, nil
 }
 
+func (service *HardwareServiceImpl) FindHardwareTypeById(ctx context.Context, id int64) (string, error) {
+	err := service.validate.Struct(ctx)
+	helper.PanicIfError(err)
+
+	dbpool := service.db
+
+	hardwareType, err := service.repository.FindHardwareTypeById(ctx, dbpool, id)
+	helper.PanicIfError(err)
+
+	return hardwareType, nil
+}
+
 func (service *HardwareServiceImpl) Create(ctx context.Context, req web.HardwareCreateRequest) (web.HardwareReadResponse, error) {
 	// validate request
 	err := service.validate.Struct(req)

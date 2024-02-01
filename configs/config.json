@@ -8,7 +8,7 @@
     "password": "root4",
     "host": "localhost",
     "port": 5432,
-    "name": "foodie"
+    "name": "icore"
   },
   "jwt": {
     "secretKey": "b=(^.t6J.#LX3y~h*5u=Kk2uPRi2krHBOyD.IQ:Wd`|q0`y(?SL}`V#2$6r#wp@"

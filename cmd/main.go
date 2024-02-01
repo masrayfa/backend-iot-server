@@ -29,7 +29,7 @@ func main() {
 	// Service
 	userService := service.NewUserService(userRepository, dbpool, validate)
 	hardwareService := service.NewHardwareService(hardwareRepository, dbpool, validate)
-	nodeService := service.NewNodeService(nodeRepository, hardwareRepository, channelRepository, dbpool, validate)
+	nodeService := service.NewNodeService(nodeRepository, hardwareRepository, channelRepository, userRepository, dbpool, validate)
 	channelService := service.NewChannelService(channelRepository, nodeRepository,dbpool, validate)
 
 	// Controller

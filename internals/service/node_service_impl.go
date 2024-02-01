@@ -3,6 +3,7 @@ package service
 import (
 	"context"
 	"errors"
+	"log"
 	"strings"
 
 	"github.com/go-playground/validator"
@@ -22,12 +23,13 @@ type NodeServiceImpl struct {
 	validator *validator.Validate 
 }
 
-func NewNodeService(repository repository.NodeRepository, hardwareRepository repository.HardwareRepository,  channelRepository repository.ChannelRepository, db *pgxpool.Pool, validator *validator.Validate) NodeService {
+func NewNodeService(repository repository.NodeRepository, hardwareRepository repository.HardwareRepository,  channelRepository repository.ChannelRepository, userRepository repository.UserRepository, db *pgxpool.Pool, validator *validator.Validate) NodeService {
 	return &NodeServiceImpl{
 		db: db,
 		repository: repository,
 		hardwareRepository: hardwareRepository,
 		channelRepository: channelRepository,
+		userRepository: userRepository,
 		validator: validator,
 	}
 }
@@ -88,95 +90,75 @@ func (service *NodeServiceImpl) FindById(ctx context.Context, id int64, limit in
 }
 
 func (service *NodeServiceImpl) Create(ctx context.Context, req web.NodeCreateRequest, idUser int64) (nodeCreateRes web.NodeCreateResponse, err error) {
-	nodeRequest := web.NodeCreateRequest{}
-	parseChannel := make(chan error)
-
-	// parse req body in goroutine
-	go func() {
-		nodeRequest = req
-		err = service.validator.Struct(&nodeRequest)
-		parseChannel <- err
-	}() 
-
-	err = <- parseChannel
+	err = service.validator.Struct(req)
 	if err != nil {
 		return nodeCreateRes, err
 	}
 
-	// hardware validation for node asynchronusly
-	validateNodeHardwareChannel := make(chan error)
-	go func() {
-		hardwareType, err := service.hardwareRepository.FindHardwareTypeById(ctx, service.db, nodeRequest.IdHardwareNode)
-		if err != nil {
-			validateNodeHardwareChannel <- err
-		}
-
-		hardwareType = strings.ToLower(hardwareType)
-		if hardwareType != "microcontroller-unit" && hardwareType != "single-board-computer" {
-			validateNodeHardwareChannel <- errors.New("hardware type is not valid")
-			return
-		}
-
-		validateNodeHardwareChannel <- nil
-	}()
+	log.Println("req: ", req)
+	// hardware validation for node 
+	hardwareType, err := service.hardwareRepository.FindHardwareTypeById(ctx, service.db, req.IdHardwareNode)
+	if err != nil {
+		log.Println("err hardwareType: ", err)
+	}
+	hardwareType = strings.ToLower(hardwareType)
+	if hardwareType != "microcontroller unit" && hardwareType != "single-board computer" {
+		return nodeCreateRes, errors.New("hardware type is not valid")
+	}
 
 	// validate sensor hardware id length with sensor field
-	if len(nodeRequest.IdHardwareSensor) != len(nodeRequest.FieldSensor) {
+	if len(req.IdHardwareSensor) != len(req.FieldSensor) {
 		return nodeCreateRes, errors.New("sensor hardware id length is not valid")
 	}
 
-	// hardware validation for sensor asynchronusly
-	sensorHardwareIdLength := len(nodeRequest.IdHardwareSensor)
-	validateSensorHardwareChannel := make(chan error, sensorHardwareIdLength)
-	 for _, id := range nodeRequest.IdHardwareSensor {
-		go func(id int64) {
-			hardwareType, err := service.hardwareRepository.FindHardwareTypeById(ctx, service.db, id)
-			if err != nil {
-				validateSensorHardwareChannel <- err
-			}
-
-			hardwareType = strings.ToLower(hardwareType)
-			if hardwareType != "sensor" {
-				validateSensorHardwareChannel <- errors.New("hardware type is not valid")
-				return
-			}
-
-			validateSensorHardwareChannel <- nil
-		}(id)
-	}
-
-	currentUser, err := service.userRepository.FindById(ctx, service.db, idUser)
+	currentUser, err := service.userRepository.FindById(ctx, service.db, req.IdUser)
 	helper.PanicIfError(err)
+	log.Println("currentUser: ", currentUser)
 
-	err = <- validateNodeHardwareChannel
-	if err != nil {
-		return nodeCreateRes, err
-	}
-
+	sensorHardwareIdLength := len(req.IdHardwareSensor)
+	// validate sensor hardware id
 	for i := 0; i < sensorHardwareIdLength; i++ {
-		err = <- validateSensorHardwareChannel
+		log.Println("req.IdHardwareSensor[i]: ", req.IdHardwareSensor[i])
+		// validate sensor hardware id
+		hardwareTypeSensor, err := service.hardwareRepository.FindHardwareTypeById(ctx, service.db, req.IdHardwareSensor[i])
 		if err != nil {
 			return nodeCreateRes, err
 		}
+
+		hardwareTypeSensor = strings.ToLower(hardwareTypeSensor)
+		log.Println("hardwareTypeSensor: ", hardwareTypeSensor)
+		
+		if hardwareTypeSensor != "sensor" {
+			return nodeCreateRes, errors.New("sensor hardware type is not valid")
+		}
+	}
+
+	// todo: validate get user authentication 
+
+	if err != nil {
+		return nodeCreateRes, err
 	}
 
 	// create node object
 	node := domain.Node{
-		Name: nodeRequest.Name,
-		Location: nodeRequest.Location,
+		Name: req.Name,
+		Location: req.Location,
+		FieldSensor: req.FieldSensor,
 		IdUser: currentUser.IdUser,
-		IdHardwareNode: nodeRequest.IdHardwareNode,
+		IdHardwareNode: req.IdHardwareNode,
+		IdHardwareSensor: req.IdHardwareSensor,
+		IsPublic: req.IsPublic,
 	}
 
 	// create node in database
-	node, err = service.repository.Create(ctx, service.db, node, &currentUser)
+	node, err = service.repository.Create(ctx, service.db, node, currentUser.IdUser)
 	helper.PanicIfError(err)
 
 	nodeCreateRes = web.NodeCreateResponse{
 		Name: node.Name,
 		Location: node.Location,
-		IdHardwareNode: node.IdHardwareNode,
 		FieldSensor: node.FieldSensor,
+		IdHardwareNode: node.IdHardwareNode,
 		IdHardwareSensor: node.IdHardwareSensor,
 		IsPublic: node.IsPublic,
 	}

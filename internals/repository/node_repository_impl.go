@@ -105,7 +105,7 @@ func (n *NodeRepositoryImpl) GetHardwareNode(ctx context.Context, pool *pgxpool.
 	return nodes, nil
 }
 
-func (n *NodeRepositoryImpl) Create(ctx context.Context, pool *pgxpool.Pool, nodePayload domain.Node, currentUser *domain.UserRead) (domain.Node, error) {
+func (n *NodeRepositoryImpl) Create(ctx context.Context, pool *pgxpool.Pool, nodePayload domain.Node, currentUserId int64) (domain.Node, error) {
 	tx, err := pool.Begin(ctx)
 	helper.PanicIfError(err)
 	defer helper.CommitOrRollback(ctx, tx)
@@ -114,18 +114,22 @@ func (n *NodeRepositoryImpl) Create(ctx context.Context, pool *pgxpool.Pool, nod
 	node := domain.Node {
 		Name: nodePayload.Name,
 		Location: nodePayload.Location,
-		IdUser: currentUser.IdUser,
+		FieldSensor: nodePayload.FieldSensor,
+		IdUser: currentUserId,
 		IdHardwareNode: nodePayload.IdHardwareNode,
+		IdHardwareSensor: nodePayload.IdHardwareSensor,
+		IsPublic: nodePayload.IsPublic,
 	}
 
 	// sql script
-	script := "INSERT INTO node (name, location, id_user, id_hardware) VALUES ($1, $2, $3, $4)"
+	script := "INSERT INTO node (name, location, id_hardware_node, id_user, is_public, id_hardware_sensor, field_sensor) VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING id_node"
 
 	// insert node
-	_, err = tx.Exec(ctx, script, node.Name, node.Location, node.IdUser, node.IdHardwareNode)
+	_, err = tx.Exec(ctx, script, node.Name, node.Location, node.IdHardwareNode, node.IdUser, node.IsPublic, node.IdHardwareSensor, node.FieldSensor)
 	if err != nil {
 		return node, err
 	}
+	log.Println("node dari repository setelah exec: ", node)
 
 	return node, nil
 }

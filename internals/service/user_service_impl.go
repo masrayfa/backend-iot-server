@@ -47,7 +47,6 @@ func (service *UserServiceImpl) FindAll(ctx context.Context) ([]web.UserRead, er
 			Username: user.Username,
 			Email: user.Email,
 			Status: user.Status,
-			Token: user.Token,
 			IsAdmin: user.IsAdmin,
 		})
 	}
@@ -69,7 +68,6 @@ func (service *UserServiceImpl) FindById(ctx context.Context, id int64) (web.Use
 		Username: user.Username,
 		Email: user.Email,
 		Status: user.Status,
-		Token: user.Token,
 		IsAdmin: user.IsAdmin,
 	}
 
@@ -102,7 +100,6 @@ func (service *UserServiceImpl) Register(ctx context.Context, req web.UserCreate
 		Username: res.Username,
 		Email: res.Email,
 		Status: res.Status,
-		Token: res.Token,
 		IsAdmin: res.IsAdmin,
 	}
 

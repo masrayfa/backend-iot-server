@@ -6,7 +6,6 @@ type User struct {
 	Username string
 	Password string
 	Status   bool
-	Token    string
 	IsAdmin  bool
 }
 
@@ -15,6 +14,5 @@ type UserRead struct {
 	Username string
 	Email    string
 	Status   bool
-	Token    string
 	IsAdmin  bool
 }
