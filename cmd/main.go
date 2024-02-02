@@ -5,7 +5,6 @@ import (
 	"net/http"
 
 	"github.com/go-playground/validator"
-	"github.com/julienschmidt/httprouter"
 	"github.com/masrayfa/internals/controller"
 	"github.com/masrayfa/internals/database"
 	"github.com/masrayfa/internals/dependencies"
@@ -39,7 +38,8 @@ func main() {
 	channelController := controller.NewChannelController(channelService)
 
 	// Router
-	mainRouter := httprouter.New()
+	mainRouter := NewRouter()
+	// router := httprouter.New()
 
 	// users endpoint
 	userRouter := NewUserRouter(userController)
@@ -49,6 +49,24 @@ func main() {
 	nodeRouter := NewNodeRouter(nodeController)
 	// channels endpoint
 	channelRouter := NewChannelRouter(channelController)
+
+	// main endpoint
+	// router.Handler("POST", "/api/v1/user/*path", http.StripPrefix("/api/v1/user", userRouter))
+	// router.Handler("GET", "/api/v1/user/*path", http.StripPrefix("/api/v1/user", userRouter))
+	// router.Handler("PUT", "/api/v1/user/*path", http.StripPrefix("/api/v1/user", userRouter))
+	// router.Handler("DELETE", "/api/v1/user/*path", http.StripPrefix("/api/v1/user", userRouter))
+
+	// router.Handler("POST", "/api/v1/hardware/*path", http.StripPrefix("/api/v1/hardware", hardwareRouter))
+	// router.Handler("GET", "/api/v1/hardware/*path", http.StripPrefix("/api/v1/hardware", hardwareRouter))
+	// router.Handler("PUT", "/api/v1/hardware/*path", http.StripPrefix("/api/v1/hardware", hardwareRouter))
+	// router.Handler("DELETE", "/api/v1/hardware/*path", http.StripPrefix("/api/v1/hardware", hardwareRouter))
+
+	// router.Handler("POST", "/api/v1/node/*path", http.StripPrefix("/api/v1/node", nodeRouter))
+	// router.Handler("GET", "/api/v1/node/*path", http.StripPrefix("/api/v1/node", nodeRouter))
+	// router.Handler("PUT", "/api/v1/node/*path", http.StripPrefix("/api/v1/node", nodeRouter))
+	// router.Handler("DELETE", "/api/v1/node/*path", http.StripPrefix("/api/v1/node", nodeRouter))
+
+	// router.Handler("POST", "/api/v1/channel/*path", http.StripPrefix("/api/v1/channel", validateDependency.GetAuthentication(channelRouter)))
 
 	// main endpoint users
 	mainRouter.Handler("POST", "/api/v1/user/*path", http.StripPrefix("/api/v1/user", userRouter))

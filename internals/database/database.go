@@ -22,8 +22,8 @@ func NewDBPool() *pgxpool.Pool {
 	fmt.Println("ini database url di new database.go", databaseUrl)
 
 	config, err := pgxpool.ParseConfig(databaseUrl)
-	config.MinConns = 5
-	config.MaxConns = 5
+	config.MinConns = 10
+	config.MaxConns = 50
 	config.MaxConnLifetime = time.Hour
 	config.MaxConnIdleTime = time.Minute * 10
 
@@ -44,3 +44,28 @@ func NewDBPool() *pgxpool.Pool {
 	log.Println("Database connected")
 	return dbpool
 }
+
+// func NewDB() {
+// 	config, err := pgx.ParseConfig(databaseUrl)
+// 	if err != nil {
+// 		fmt.Fprintf(os.Stderr, "Unable to parse config: %v\n", err)
+// 		return nil
+// 	}
+
+// 	db, err := pgx.Connect(config)
+// 	if err != nil {
+// 		fmt.Fprintf(os.Stderr, "Unable to connect to database: %v\n", err)
+// 		return nil
+// 	}
+
+// 	// Check connection
+// 	err = db.Ping(context.Background())
+// 	if err != nil {
+// 		fmt.Fprintf(os.Stderr, "Unable to connect to database: %v\n", err)
+// 		db.Close(context.Background())
+// 		return nil
+// 	}
+
+// 	log.Println("Database connected")
+// 	return db
+// }
