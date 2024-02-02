@@ -89,7 +89,7 @@ func (service *NodeServiceImpl) FindById(ctx context.Context, id int64, limit in
 	return nodeWithFeed, nil
 }
 
-func (service *NodeServiceImpl) Create(ctx context.Context, req web.NodeCreateRequest, idUser int64) (nodeCreateRes web.NodeCreateResponse, err error) {
+func (service *NodeServiceImpl) Create(ctx context.Context, req web.NodeCreateRequest) (nodeCreateRes web.NodeCreateResponse, err error) {
 	err = service.validator.Struct(req)
 	if err != nil {
 		return nodeCreateRes, err

@@ -65,11 +65,7 @@ func (controller *NodeControllerImpl) Create(writer http.ResponseWriter, request
 	nodeCreateRequest := web.NodeCreateRequest{}
 	helper.ReadFromRequestBody(request, &nodeCreateRequest)
 
-	param := params.ByName("id")
-	id, err := strconv.ParseInt(param, 10, 64)
-	helper.PanicIfError(err)
-
-	nodeCreateResponse, err := controller.nodeService.Create(request.Context(), nodeCreateRequest, id)
+	nodeCreateResponse, err := controller.nodeService.Create(request.Context(), nodeCreateRequest)
 	helper.PanicIfError(err)
 
 	webResponse := web.WebResponse{
