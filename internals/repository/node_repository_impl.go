@@ -27,33 +27,29 @@ func (n *NodeRepositoryImpl) FindAll(ctx context.Context, pool *pgxpool.Pool, cu
 	var script string
 	var rows pgx.Rows
 
+	log.Println("currentUser dari repository: ", currentUser)
+
 	// if user is admin, show all nodes
 	if currentUser.IsAdmin {
-		script = "SELECT * FROM node"
-		rows, err := tx.Query(ctx, script)
+		script = `SELECT * FROM node`
+		rows, err = tx.Query(ctx, script)
 		helper.PanicIfError(err)
-		defer rows.Close()
 	} else { // if user is not admin, show only nodes that belong to user
-		script = "SELECT * FROM node WHERE id_user = $1"
-
-		rows, err := tx.Query(ctx, script, currentUser.IdUser)
+		script = `SELECT * FROM "node" WHERE id_user=$1 OR is_public=true`
+		rows, err = tx.Query(ctx, script, currentUser.IdUser)
 		helper.PanicIfError(err)
-		defer rows.Close()
 	}
 
 
 	for rows.Next() {
 		var node domain.Node
-		err := rows.Scan(&node.IdNode, &node.Name, &node.Location, &node.IdUser, &node.IdHardwareNode)
+		// Scan ini harus sesuai dengan urutan kolom di tabel node di database postgres
+		err := rows.Scan(&node.IdNode, &node.IdUser, &node.IdHardwareNode, &node.Name, &node.Location, &node.IdHardwareSensor, &node.FieldSensor, &node.IsPublic)
 		if err != nil {
 			return nil, err
 		}
 		nodes = append(nodes, node)
 	}
-
-	// if err := rows.Err(); err != nil {
-	// 	return nil, err
-	// }
 
 	return nodes, nil
 }

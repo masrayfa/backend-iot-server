@@ -9,6 +9,7 @@ import (
 	"github.com/masrayfa/internals/database"
 	"github.com/masrayfa/internals/dependencies"
 	"github.com/masrayfa/internals/helper"
+	"github.com/masrayfa/internals/middleware"
 	"github.com/masrayfa/internals/repository"
 	"github.com/masrayfa/internals/service"
 )
@@ -37,9 +38,10 @@ func main() {
 	nodeController := controller.NewNodeController(nodeService)
 	channelController := controller.NewChannelController(channelService)
 
+	authenticationMiddleware := middleware.NewAuthenticationMiddleware(&validateDependency)
+
 	// Router
-	mainRouter := NewRouter()
-	// router := httprouter.New()
+	mainRouter := NewRouter(&authenticationMiddleware)
 
 	// users endpoint
 	userRouter := NewUserRouter(userController)
@@ -50,45 +52,33 @@ func main() {
 	// channels endpoint
 	channelRouter := NewChannelRouter(channelController)
 
-	// main endpoint
-	// router.Handler("POST", "/api/v1/user/*path", http.StripPrefix("/api/v1/user", userRouter))
-	// router.Handler("GET", "/api/v1/user/*path", http.StripPrefix("/api/v1/user", userRouter))
-	// router.Handler("PUT", "/api/v1/user/*path", http.StripPrefix("/api/v1/user", userRouter))
-	// router.Handler("DELETE", "/api/v1/user/*path", http.StripPrefix("/api/v1/user", userRouter))
-
-	// router.Handler("POST", "/api/v1/hardware/*path", http.StripPrefix("/api/v1/hardware", hardwareRouter))
-	// router.Handler("GET", "/api/v1/hardware/*path", http.StripPrefix("/api/v1/hardware", hardwareRouter))
-	// router.Handler("PUT", "/api/v1/hardware/*path", http.StripPrefix("/api/v1/hardware", hardwareRouter))
-	// router.Handler("DELETE", "/api/v1/hardware/*path", http.StripPrefix("/api/v1/hardware", hardwareRouter))
-
-	// router.Handler("POST", "/api/v1/node/*path", http.StripPrefix("/api/v1/node", nodeRouter))
-	// router.Handler("GET", "/api/v1/node/*path", http.StripPrefix("/api/v1/node", nodeRouter))
-	// router.Handler("PUT", "/api/v1/node/*path", http.StripPrefix("/api/v1/node", nodeRouter))
-	// router.Handler("DELETE", "/api/v1/node/*path", http.StripPrefix("/api/v1/node", nodeRouter))
-
-	// router.Handler("POST", "/api/v1/channel/*path", http.StripPrefix("/api/v1/channel", validateDependency.GetAuthentication(channelRouter)))
-
 	// main endpoint users
-	mainRouter.Handler("POST", "/api/v1/user/*path", http.StripPrefix("/api/v1/user", userRouter))
-	mainRouter.Handler("GET", "/api/v1/user/*path", http.StripPrefix("/api/v1/user", userRouter))
-	mainRouter.Handler("PUT", "/api/v1/user/*path", http.StripPrefix("/api/v1/user", userRouter))
-	mainRouter.Handler("DELETE", "/api/v1/user/*path", http.StripPrefix("/api/v1/user", userRouter))
+	mainRouter.appRouter.Handler("POST", "/api/v1/user/*path", http.StripPrefix("/api/v1/user", userRouter))
+	mainRouter.appRouter.Handler("GET", "/api/v1/user/*path", http.StripPrefix("/api/v1/user", userRouter))
+	mainRouter.appRouter.Handler("PUT", "/api/v1/user/*path", http.StripPrefix("/api/v1/user", userRouter))
+	mainRouter.appRouter.Handler("DELETE", "/api/v1/user/*path", http.StripPrefix("/api/v1/user", userRouter))
+
+	// old main endpoint users
+	// mainRouter.Handler("POST", "/api/v1/user/*path", http.StripPrefix("/api/v1/user", userRouter))
+	// mainRouter.Handler("GET", "/api/v1/user/*path", http.StripPrefix("/api/v1/user", userRouter))
+	// mainRouter.Handler("PUT", "/api/v1/user/*path", http.StripPrefix("/api/v1/user", userRouter))
+	// mainRouter.Handler("DELETE", "/api/v1/user/*path", http.StripPrefix("/api/v1/user", userRouter))
 	// main endpoint hardwares
-	mainRouter.Handler("POST", "/api/v1/hardware/*path", http.StripPrefix("/api/v1/hardware", hardwareRouter))
-	mainRouter.Handler("GET", "/api/v1/hardware/*path", http.StripPrefix("/api/v1/hardware", hardwareRouter))
-	mainRouter.Handler("PUT", "/api/v1/hardware/*path", http.StripPrefix("/api/v1/hardware", hardwareRouter))
-	mainRouter.Handler("DELETE", "/api/v1/hardware/*path", http.StripPrefix("/api/v1/hardware", hardwareRouter))
+	mainRouter.appRouter.Handler("POST", "/api/v1/hardware/*path", http.StripPrefix("/api/v1/hardware", hardwareRouter))
+	mainRouter.appRouter.Handler("GET", "/api/v1/hardware/*path", http.StripPrefix("/api/v1/hardware", hardwareRouter))
+	mainRouter.appRouter.Handler("PUT", "/api/v1/hardware/*path", http.StripPrefix("/api/v1/hardware", hardwareRouter))
+	mainRouter.appRouter.Handler("DELETE", "/api/v1/hardware/*path", http.StripPrefix("/api/v1/hardware", hardwareRouter))
 	// main endpoint nodes
-	mainRouter.Handler("POST", "/api/v1/node/*path", http.StripPrefix("/api/v1/node", nodeRouter))
-	mainRouter.Handler("GET", "/api/v1/node/*path", http.StripPrefix("/api/v1/node", nodeRouter))
-	mainRouter.Handler("PUT", "/api/v1/node/*path", http.StripPrefix("/api/v1/node", nodeRouter))
-	mainRouter.Handler("DELETE", "/api/v1/node/*path", http.StripPrefix("/api/v1/node", nodeRouter))
+	mainRouter.appRouter.Handler("POST", "/api/v1/node/*path", http.StripPrefix("/api/v1/node", nodeRouter))
+	mainRouter.appRouter.Handler("GET", "/api/v1/node/*path", http.StripPrefix("/api/v1/node", nodeRouter))
+	mainRouter.appRouter.Handler("PUT", "/api/v1/node/*path", http.StripPrefix("/api/v1/node", nodeRouter))
+	mainRouter.appRouter.Handler("DELETE", "/api/v1/node/*path", http.StripPrefix("/api/v1/node", nodeRouter))
 	// main endpoint channels
-	mainRouter.Handler("POST", "/api/v1/channel/*path", http.StripPrefix("/api/v1/channel", validateDependency.GetAuthentication(channelRouter)))
+	mainRouter.appRouter.Handler("POST", "/api/v1/channel/*path", http.StripPrefix("/api/v1/channel", validateDependency.GetAuthentication(channelRouter)))
 
 	server := http.Server {
 		Addr: ":8080",
-		Handler: mainRouter,
+		Handler: mainRouter.appRouter,
 	}
 
 	err := server.ListenAndServe()

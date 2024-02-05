@@ -24,11 +24,13 @@ func (controller *NodeControllerImpl) FindAll(writer http.ResponseWriter, reques
 	limit, err := strconv.ParseInt(limitStr, 10, 64)
 	helper.PanicIfError(err)
 
-	param := params.ByName("id")
-	id, err := strconv.ParseInt(param, 10, 64)
-	helper.PanicIfError(err)
+	log.Println("limit: ", limit)
 
-	node, err := controller.nodeService.FindAll(request.Context(), limit, id)
+	// findAllReq := web.NodeFindAllReq{}
+	// helper.ReadFromRequestBody(request, &findAllReq)
+	// log.Println("id: ", findAllReq.IdUser)
+
+	node, err := controller.nodeService.FindAll(request.Context(), limit, 1)
 	helper.PanicIfError(err)
 
 	webResponse := web.WebResponse{

@@ -43,8 +43,13 @@ func (service *NodeServiceImpl) FindAll(ctx context.Context, limit int64, idUser
 	currentUser, err := service.userRepository.FindById(ctx, dbpool, idUser)
 	helper.PanicIfError(err)
 
+	log.Println("currentUser: ", currentUser)
+
 	nodes, err := service.repository.FindAll(ctx, dbpool, &currentUser)
 	helper.PanicIfError(err)
+
+	log.Println("nodes: ", nodes)
+	log.Println("nodes id: ", nodes[0].IdNode)
 
 	// get all channel
 	nodeChannels, err := service.channelRepository.GetNodeChannelMultiple(ctx, dbpool, nodes, limit)
