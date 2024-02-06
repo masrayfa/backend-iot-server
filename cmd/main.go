@@ -74,7 +74,7 @@ func main() {
 	mainRouter.appRouter.Handler("PUT", "/api/v1/node/*path", http.StripPrefix("/api/v1/node", nodeRouter))
 	mainRouter.appRouter.Handler("DELETE", "/api/v1/node/*path", http.StripPrefix("/api/v1/node", nodeRouter))
 	// main endpoint channels
-	mainRouter.appRouter.Handler("POST", "/api/v1/channel/*path", http.StripPrefix("/api/v1/channel", validateDependency.GetAuthentication(channelRouter)))
+	mainRouter.appRouter.Handler("POST", "/api/v1/channel/*path", http.StripPrefix("/api/v1/channel", authenticationMiddleware.ValidateUser(channelRouter)))
 
 	server := http.Server {
 		Addr: ":8080",

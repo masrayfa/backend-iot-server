@@ -1,6 +1,7 @@
 package controller
 
 import (
+	"log"
 	"net/http"
 
 	"github.com/julienschmidt/httprouter"
@@ -22,6 +23,8 @@ func NewChannelController(channelService service.ChannelService) ChannelControll
 func (controller *ChannelControllerImpl) Create(writer http.ResponseWriter, request *http.Request, params httprouter.Params) {
 	channelRequest := web.ChannelCreateRequest{}
 	helper.ReadFromRequestBody(request, &channelRequest)
+
+	log.Println("channelRequest: ", channelRequest)
 
 	channelResponse, err := controller.channelService.Create(request.Context(), channelRequest)
 	helper.PanicIfError(err)

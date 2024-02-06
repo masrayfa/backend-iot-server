@@ -2,6 +2,7 @@ package helper
 
 import (
 	"errors"
+	"log"
 	"net/http"
 	"net/url"
 	"strings"
@@ -29,13 +30,15 @@ func ValidateToken(tokenString string) (user domain.UserRead, err error) {
 		return domain.UserRead{}, err
 	}
 
+	log.Println("token dari fungsi validate token: ", token)
+
 	// validate claims
 	if claims, ok := token.Claims.(jwt.MapClaims); ok && token.Valid {
-		user.IdUser = int64(claims["id"].(float64))
+		user.IdUser = int64(claims["idUser"].(float64))
 		user.Email = claims["email"].(string)
 		user.Username = claims["username"].(string)
 		user.Status = claims["status"].(bool)
-		user.IsAdmin = claims["is_admin"].(bool)
+		user.IsAdmin = claims["isAdmin"].(bool)
 		return user, nil
 	} else if errors.Is(err, jwt.ErrTokenMalformed) {
 		return user, errors.New("Invalid token")
@@ -45,10 +48,17 @@ func ValidateToken(tokenString string) (user domain.UserRead, err error) {
 		return user, errors.New("Could not handle token")
 	}
 }
+
 func ValidateUserCredentials(w http.ResponseWriter, r *http.Request) (domain.UserRead, error) {
 	authorizationCookies, err := r.Cookie("authorization")
 	if err != nil && err != http.ErrNoCookie {
 		return domain.UserRead{}, err
+	}
+
+	if authorizationCookies != nil {
+		log.Println("authorizationCookies name: ", authorizationCookies.Name)
+	} else {
+		log.Println("authorizationCookies is nil")
 	}
 
 	authorizationCookiesValue := ""
@@ -57,9 +67,15 @@ func ValidateUserCredentials(w http.ResponseWriter, r *http.Request) (domain.Use
 		if err != nil {
 			return domain.UserRead{}, err
 		}
+	} else {
+		return domain.UserRead{}, errors.New("Unauthorized")
 	}
 
+	log.Println("authorizationCookiesValue: ", authorizationCookiesValue)
+
 	authorizationHeaders, haveAuthorizationHeader := r.Header["Authorization"]
+
+	log.Println("authorizationHeaders: ", authorizationHeaders)
 
 	authorizationHeaderValue := ""
 	if !haveAuthorizationHeader && authorizationCookiesValue == "" {
@@ -77,10 +93,14 @@ func ValidateUserCredentials(w http.ResponseWriter, r *http.Request) (domain.Use
 		return domain.UserRead{}, errors.New("Unauthorized")
 	}
 
+	log.Println("authorizationSplit[0]: ", authorizationSplit[0])
+
 	authorizationType := authorizationSplit[0]
 	if authorizationType != "Bearer" {
 		return domain.UserRead{}, errors.New("Unauthorized")
 	}
+
+	log.Println("authorizationSplit[1]: ", authorizationSplit[1])
 
 	authorizationToken := authorizationSplit[1]
 
@@ -89,5 +109,11 @@ func ValidateUserCredentials(w http.ResponseWriter, r *http.Request) (domain.Use
 		return domain.UserRead{}, err
 	}
 
+	log.Println("user dari middleware validate user credentials: ", user)
+
 	return user, nil
+
+
+	// headerAuth := r.Header.Get("Authorization")
+	// log.Println("headerAuth: ", headerAuth)
 }

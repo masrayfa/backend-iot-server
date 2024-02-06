@@ -210,11 +210,11 @@ func SignUserToken(user domain.User) (string, error) {
 	config := configs.GetConfig()
 
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
-		"id_user": user.IdUser,
+		"idUser": user.IdUser,
 		"username": user.Username,
 		"email": user.Email,
 		"status": user.Status,
-		"isadmin": user.IsAdmin,
+		"isAdmin": user.IsAdmin,
 		"iat": time.Now().Unix(),
 	})
 

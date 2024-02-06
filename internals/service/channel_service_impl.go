@@ -3,9 +3,11 @@ package service
 import (
 	"context"
 	"errors"
+	"log"
 
 	"github.com/go-playground/validator"
 	"github.com/jackc/pgx/v5/pgxpool"
+	"github.com/masrayfa/internals/helper"
 	"github.com/masrayfa/internals/models/domain"
 	"github.com/masrayfa/internals/models/web"
 	"github.com/masrayfa/internals/repository"
@@ -28,63 +30,31 @@ func NewChannelService( repository repository.ChannelRepository, nodeRepository 
 }
 
 func (service *ChannelServiceImpl) Create(ctx context.Context, req web.ChannelCreateRequest) (web.ChannelReadResponse, error) {
-	parseChannel := make(chan error)
-	go func() {
-		err := service.validator.Struct(req)
-		parseChannel <- err
-	}()
+	err := service.validator.Struct(req)
+	helper.PanicIfError(err)
+	// type currentUserResult struct {
+	// 	res domain.UserRead
+	// 	err error
+	// }
 
-	type currentUserResult struct {
-		res domain.UserRead
-		err error
+	log.Println("req dari channel service: ", req)
+
+	currentUser, ok := ctx.Value("currentUser").(domain.UserRead)
+	if !ok {
+		return web.ChannelReadResponse{}, errors.New("user not found")
 	}
-	currentUserChannel := make(chan currentUserResult)
-	go func() {
-		currentUser, ok := ctx.Value("currentUser").(domain.UserRead)
-		if !ok {
-			currentUserChannel <- currentUserResult{
-				err: nil,
-			}
-		}
-		currentUserChannel <- currentUserResult{
-			res: currentUser,
-			err: nil,
-		}
-	}()
 
-	// parsing 
-	err := <- parseChannel
+	node, err := service.nodeRepository.FindById(ctx, service.db, req.IdNode)
 	if err != nil {
 		return web.ChannelReadResponse{}, err
 	}
-
-	// validate node owner async
-	nodeOwnerErrorChannel := make(chan error)
-	go func() {
-		node, err := service.nodeRepository.FindById(ctx, service.db, req.IdNode)
-		if err != nil {
-			nodeOwnerErrorChannel <- err
-			return
-		}
-		currentUserRes := <- currentUserChannel
-		err = currentUserRes.err
-		if err != nil {
-			nodeOwnerErrorChannel <- err
-			return
-		}
-		currentUser := currentUserRes.res
-
-		if currentUser.IdUser != node.IdUser {
-			nodeOwnerErrorChannel <- errors.New("node owner not match")
-			return
-		}
-
-		nodeOwnerErrorChannel <- nil
-	}()
-
-	err = <- nodeOwnerErrorChannel
 	if err != nil {
 		return web.ChannelReadResponse{}, err
+	}
+	log.Println("node dari channel service: ", node)
+
+	if currentUser.IdUser != node.IdUser {
+		return web.ChannelReadResponse{}, errors.New("unauthorized")
 	}
 
 	// create channel
