@@ -54,7 +54,9 @@ func (service *ChannelServiceImpl) Create(ctx context.Context, req web.ChannelCr
 	log.Println("node dari channel service: ", node)
 
 	if currentUser.IdUser != node.IdUser {
-		return web.ChannelReadResponse{}, errors.New("unauthorized")
+		log.Println("currentUser.IdUser: ", currentUser.IdUser)
+		log.Println("node.IdUser: ", node.IdUser)
+		return web.ChannelReadResponse{}, errors.New("current user is not the owner of the node")
 	}
 
 	// create channel

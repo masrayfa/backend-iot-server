@@ -18,12 +18,6 @@ func NewRouter(authMiddleware *middleware.AuthenticationMiddleware) *Router {
 	}
 }
 
-// func NewRouter() *httprouter.Router {
-// 	mainRouter := httprouter.New()
-
-// 	return mainRouter 
-// }
-
 func NewUserRouter(userController controller.UserController) *httprouter.Router {
 	router := &Router{
 		appRouter: httprouter.New(),
@@ -31,7 +25,6 @@ func NewUserRouter(userController controller.UserController) *httprouter.Router 
 
 	// users endpoint
 	router.appRouter.POST("/register", userController.Register)
-	// router.POST("/register", userController.Register)
 	router.appRouter.POST("/login", userController.Login)
 	router.appRouter.GET("/", userController.FindAll)
 	router.appRouter.GET("/:id", userController.FindById)
