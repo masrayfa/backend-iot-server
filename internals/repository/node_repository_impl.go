@@ -60,9 +60,9 @@ func (n *NodeRepositoryImpl) FindById(ctx context.Context, pool *pgxpool.Pool, i
 
 	var node domain.Node
 
-	script := "SELECT * FROM node WHERE id = $1"
+	script := "SELECT * FROM node WHERE id_node = $1"
 
-	err = tx.QueryRow(ctx, script, id).Scan(&node.IdNode, &node.Name, &node.Location, &node.IdUser, &node.IdHardwareNode)
+	err = tx.QueryRow(ctx, script, id).Scan(&node.IdNode, &node.IdUser, &node.IdHardwareNode, &node.Name, &node.Location, &node.IdHardwareSensor, &node.FieldSensor, &node.IsPublic)
 	if err != nil {
 		return node, err
 	}
