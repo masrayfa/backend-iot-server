@@ -20,6 +20,7 @@ type Config struct {
 	Server   Server
 	Database Database
 	JWT JWT
+	Mail Mail
 }
 
 type Server struct {
@@ -35,6 +36,14 @@ type Database struct {
 	Name     string `json:"name"`
 }
 
+type Mail struct {
+	SMTPHost string `json:"smtp_host"`
+	SMTPPort int `json:"smtp_port"`
+	SenderName string `json:"sender_name"`
+	AuthenticationMail string `json:"authentication_mail"`
+	AuthenticationPassword string `json:"authentication_password"`
+}
+
 type JWT struct {
 	SecretKey string `json:"secret_key"`
 }
@@ -45,7 +54,6 @@ func init() {
 		fmt.Println(err)
 		os.Exit(1)
 	}
-	// fmt.Println("work_dir", work_dir)
 	configSettings := viper.New()
 
 	envPath := path.Join(work_dir, ".env")
@@ -53,8 +61,6 @@ func init() {
 	if err != nil {
 		fmt.Println("Error loading .env file")
 	}
-	// databaseURL := os.Getenv("DATABASE_URL")
-	// fmt.Println("ini database url",databaseURL)
 
 	// Environment variables
 	configSettings.AutomaticEnv()

@@ -140,6 +140,19 @@ func (r *UserRepositoryImpl) Delete(ctx context.Context, dbpool *pgxpool.Pool, i
 
 // UpdateStatus updates a user status
 func (r *UserRepositoryImpl) UpdateStatus(ctx context.Context, dbpool *pgxpool.Pool, id int64, status bool) error {
+	tx, err := dbpool.Begin(ctx)
+	defer helper.CommitOrRollback(ctx, tx)
+
+	script := "UPDATE user_person SET status = $1 WHERE id_user = $2"
+
+	res, err := tx.Exec(ctx, script, status, id)
+	helper.PanicIfError(err)
+
+	if res.RowsAffected() != 1 {
+		http.Error(nil, fmt.Sprintf("No row affected on update user status with id: %d", id), http.StatusBadRequest)
+		return err
+	}
+
 	return nil
 }
 
@@ -181,6 +194,23 @@ func (r *UserRepositoryImpl) MatchPassword(ctx context.Context, dbpool *pgxpool.
 	if userPassword != hashedPassword {
 		return err
 	}
+
+	return nil
+}
+
+func (r *UserRepositoryImpl) SendEmailForgotPassword(ctx context.Context, dbpool *pgxpool.Pool, user domain.User, password string) error {
+	subject := "Forgot Password"
+	body := fmt.Sprintf(`<html>
+	 	<head></head>
+		<body>
+		<h3>Hi %s</h3>
+		<p>Your forgot password request is already received. Here is your new password: %s</p>
+		</body>
+
+		</html>`, user.Username, password)
+
+	err := helper.SendEmail(user.Email, subject, body)
+	helper.PanicIfError(err)
 
 	return nil
 }

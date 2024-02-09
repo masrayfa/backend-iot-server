@@ -30,6 +30,8 @@ func NewUserRouter(userController controller.UserController) *httprouter.Router 
 	router.appRouter.GET("/:id", userController.FindById)
 	router.appRouter.PUT("/:id", userController.UpdatePassword)
 	router.appRouter.DELETE("/:id", userController.Delete)
+	router.appRouter.POST("/activation", userController.Activation)
+	router.appRouter.POST("/forgot-password", userController.ForgotPassword)
 
 	return router.appRouter
 }

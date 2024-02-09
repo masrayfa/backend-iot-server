@@ -18,4 +18,5 @@ type UserRepository interface {
 	UpdateStatus(ctx context.Context, dbpool *pgxpool.Pool, id int64, status bool) error
 	UpdatePassword(ctx context.Context, dbpool *pgxpool.Pool, id int64, password string) error
 	MatchPassword(ctx context.Context, dbpool *pgxpool.Pool, id int64, password string) error
+	SendEmailForgotPassword(ctx context.Context, dbpool *pgxpool.Pool, user domain.User, password string) error
 }

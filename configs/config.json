@@ -16,7 +16,7 @@
   "mail": {
     "smtpHost": "smtp.gmail.com",
     "smtpPort": 587,
-    "senderName": "Server IoT IPB<iot.server.ipb@gmail.com>",
+    "senderName": "Server IoT IPB<rayfananda1920@gmail.com>",
     "authenticationMail": "",
     "authenticationPassword": ""
   },

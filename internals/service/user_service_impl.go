@@ -143,11 +143,67 @@ func (service *UserServiceImpl) Login(ctx context.Context, req web.UserLoginRequ
 }
 
 func (service *UserServiceImpl) Activation(ctx context.Context, token string) error {
-	panic("unimplemented")
+	err := service.validate.Struct(ctx)
+	helper.PanicIfError(err)
+
+	dbpool := service.db
+
+	// validate token
+	user, err := helper.ValidateToken(token)
+	helper.PanicIfError(err)
+
+	// update status
+	err = service.userRepository.UpdateStatus(ctx, dbpool, user.IdUser, true)
+	helper.PanicIfError(err)
+
+	log.Println("user berhasil diaktivasi")
+
+	return nil
 }
 
 func (service *UserServiceImpl) ForgotPassword(ctx context.Context,req web.UserForgotPasswordRequest) error {
-	panic("unimplemented")
+	err := service.validate.Struct(ctx)
+	helper.PanicIfError(err)
+
+	dbpool := service.db
+	helper.PanicIfError(err)
+
+	// find user by username and email
+	user, err := service.userRepository.FindByUsername(ctx, dbpool, req.Username)
+	helper.PanicIfError(err)
+
+	email, err := service.userRepository.FindByEmail(ctx, dbpool, req.Email)
+	helper.PanicIfError(err)
+
+	if user.IdUser != email.IdUser {
+		http.Error(nil, "Invalid username or email", http.StatusBadRequest)
+		panic(err)
+	} 
+
+	err = service.validate.VarWithValue(user.Email, req.Email, "eqfield")
+	helper.PanicIfError(err)
+
+	if user.Status == false {
+		http.Error(nil, "User is not active", http.StatusBadRequest)
+		panic(err)
+	}
+
+	newPassword := helper.GenerateRandomString(8)
+	log.Println("newPassword", newPassword)
+
+	// update password
+	err = service.userRepository.UpdatePassword(ctx, dbpool, user.IdUser, newPassword)
+	helper.PanicIfError(err)
+
+	// generate token
+	token, err := SignUserToken(user)
+	helper.PanicIfError(err)
+
+	// send email
+	log.Println("token", token)
+
+	return nil
+
 }
 
 func (service *UserServiceImpl) MatchPassword(ctx context.Context,id int64, password string) error {
