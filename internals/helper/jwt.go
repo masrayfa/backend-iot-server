@@ -6,11 +6,32 @@ import (
 	"net/http"
 	"net/url"
 	"strings"
+	"time"
 
 	"github.com/golang-jwt/jwt/v4"
 	"github.com/masrayfa/configs"
 	"github.com/masrayfa/internals/models/domain"
 )
+
+func SignUserToken(user domain.UserRead) (string, error) {
+	config := configs.GetConfig()
+
+	token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
+		"idUser": user.IdUser,
+		"username": user.Username,
+		"email": user.Email,
+		"status": user.Status,
+		"isAdmin": user.IsAdmin,
+		"iat": time.Now().Unix(),
+	})
+
+	tokenString, err := token.SignedString([]byte(config.JWT.SecretKey))
+	if err != nil {
+		return "", err
+	}
+
+	return tokenString, nil
+}
 
 func ValidateToken(tokenString string) (user domain.UserRead, err error) {
 	config := configs.GetConfig()
@@ -19,7 +40,7 @@ func ValidateToken(tokenString string) (user domain.UserRead, err error) {
 	token, err := jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
 		// validate signing method
 		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
-			return nil, errors.New("Invalid token")
+			return nil, errors.New("invalid token")
 		}
 
 		// return secret key
@@ -41,11 +62,11 @@ func ValidateToken(tokenString string) (user domain.UserRead, err error) {
 		user.IsAdmin = claims["isAdmin"].(bool)
 		return user, nil
 	} else if errors.Is(err, jwt.ErrTokenMalformed) {
-		return user, errors.New("Invalid token")
+		return user, errors.New("invalid token")
 	} else if errors.Is(err, jwt.ErrTokenExpired) || errors.Is(err, jwt.ErrTokenNotValidYet) {
-		return user, errors.New("Token expired")
+		return user, errors.New("token expired")
 	} else {
-		return user, errors.New("Could not handle token")
+		return user, errors.New("could not handle token")
 	}
 }
 

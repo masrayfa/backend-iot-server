@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"strconv"
 	"time"
 
 	"github.com/go-playground/validator"
@@ -74,7 +75,7 @@ func (service *UserServiceImpl) FindById(ctx context.Context, id int64) (web.Use
 	return userResponse, nil
 }
 
-func (service *UserServiceImpl) Register(ctx context.Context, req web.UserCreateRequest) (web.UserRead, error) {
+func (service *UserServiceImpl) Register(ctx context.Context, req *http.Request, payload web.UserCreateRequest) (web.UserRead, error) {
 	// validate request
 	err := service.validate.Struct(req)
 	helper.PanicIfError(err)
@@ -84,10 +85,31 @@ func (service *UserServiceImpl) Register(ctx context.Context, req web.UserCreate
 
 	// create user object
 	user := domain.User {
-		Username: req.Username,
-		Email: req.Email,
-		Password: req.Password,
+		Username: payload.Username,
+		Email: payload.Email,
+		Password: payload.Password,
 	}
+	log.Println("user service", user)
+
+	_, err = service.userRepository.FindByUsername(ctx, dbpool, user.Username)
+	if helper.IsErrorNotFound(err) {
+		log.Println("username tidak ada")
+	} 
+	if err != nil {
+		http.Error(nil, "Username already exists", http.StatusBadRequest)
+		panic(err)
+	}
+	log.Println("username pass")
+
+	_, err = service.userRepository.FindByEmail(ctx, dbpool, user.Email)
+	if helper.IsErrorNotFound(err) {
+		log.Println("email tidak ada")
+	}
+	if err != nil {
+		http.Error(nil, "Email already exists", http.StatusBadRequest)
+		panic(err)
+	}
+	log.Println("email pass")
 
 	// save user
 	res, err := service.userRepository.Save(ctx, dbpool, user)
@@ -102,6 +124,39 @@ func (service *UserServiceImpl) Register(ctx context.Context, req web.UserCreate
 		Status: res.Status,
 		IsAdmin: res.IsAdmin,
 	}
+
+	sendEmail, err := strconv.ParseBool(req.URL.Query().Get("send_email"))
+	if err != nil {
+		http.Error(nil, "Invalid send_email", http.StatusBadRequest)
+		panic(err)
+	}
+
+	var userRead domain.UserRead
+	userRead.IdUser = userResponse.IdUser
+	userRead.Username = userResponse.Username
+	userRead.Email = userResponse.Email
+	userRead.Status = userResponse.Status
+	userRead.IsAdmin = userResponse.IsAdmin
+
+	// send email
+	if sendEmail {
+		err := service.userRepository.SendEmailActivation(ctx, dbpool, userRead)
+		if err != nil {
+			http.Error(nil, "Failed to send activation email", http.StatusBadRequest)
+			panic(err)
+		}
+	}
+
+	response := fmt.Sprintf("Success sign in, id: %d. Check email for activation", user.IdUser)
+    config := configs.GetConfig()
+    if config.Server.Env == "test" {
+        jwt, err := helper.SignUserToken(userRead)
+        if err != nil {
+            http.Error(nil, "Failed to generate JWT token", http.StatusInternalServerError)
+			panic(err)
+        }
+        response += fmt.Sprintf(". Token: %s|", jwt)
+    }
 
 	// return response
 	return userResponse, nil
@@ -119,6 +174,11 @@ func (service *UserServiceImpl) Login(ctx context.Context, req web.UserLoginRequ
 	user, err := service.userRepository.FindByUsername(ctx, dbpool, req.Username)
 	helper.PanicIfError(err)
 	log.Println("user diambil dari repo: ", user)
+
+	if !user.Status {
+		http.Error(nil, "User is not active", http.StatusBadRequest)
+		panic(err)
+	}
 
 	// compare password
 	err = service.userRepository.MatchPassword(ctx, dbpool, user.IdUser, req.Password)
@@ -151,6 +211,10 @@ func (service *UserServiceImpl) Activation(ctx context.Context, token string) er
 	// validate token
 	user, err := helper.ValidateToken(token)
 	helper.PanicIfError(err)
+	if user.Status {
+		http.Error(nil, "User already active", http.StatusBadRequest)
+		panic(err)
+	}
 
 	// update status
 	err = service.userRepository.UpdateStatus(ctx, dbpool, user.IdUser, true)
@@ -183,7 +247,7 @@ func (service *UserServiceImpl) ForgotPassword(ctx context.Context,req web.UserF
 	err = service.validate.VarWithValue(user.Email, req.Email, "eqfield")
 	helper.PanicIfError(err)
 
-	if user.Status == false {
+	if !user.Status {
 		http.Error(nil, "User is not active", http.StatusBadRequest)
 		panic(err)
 	}
@@ -203,7 +267,6 @@ func (service *UserServiceImpl) ForgotPassword(ctx context.Context,req web.UserF
 	log.Println("token", token)
 
 	return nil
-
 }
 
 func (service *UserServiceImpl) MatchPassword(ctx context.Context,id int64, password string) error {
@@ -240,10 +303,6 @@ func (service *UserServiceImpl) UpdatePassword(ctx context.Context,id int64, pas
 	log.Println("password berhasil diupdate")
 
 	return nil
-}
-
-func (service *UserServiceImpl) UpdateStatus(ctx context.Context,id int64, status bool) error {
-	panic("unimplemented")
 }
 
 func (service *UserServiceImpl) Delete(ctx context.Context, id int64) error {

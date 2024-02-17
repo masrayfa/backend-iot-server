@@ -74,6 +74,7 @@ func (r *HardwareRepositoryImpl) FindAllNode(ctx context.Context, pool *pgxpool.
 
 func (r *HardwareRepositoryImpl) FindAllSensor(ctx context.Context, pool *pgxpool.Pool ) ([]domain.Hardware, error) {
 	tx, err := pool.Begin(ctx)
+	helper.PanicIfError(err)
 	defer helper.CommitOrRollback(ctx, tx)
 
 	script := "SELECT * FROM hardware WHERE lower(type) = 'sensor'"

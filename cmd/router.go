@@ -24,14 +24,14 @@ func NewUserRouter(userController controller.UserController) *httprouter.Router 
 	}
 
 	// users endpoint
-	router.appRouter.POST("/register", userController.Register)
-	router.appRouter.POST("/login", userController.Login)
-	router.appRouter.GET("/", userController.FindAll)
-	router.appRouter.GET("/:id", userController.FindById)
-	router.appRouter.PUT("/:id", userController.UpdatePassword)
-	router.appRouter.DELETE("/:id", userController.Delete)
-	router.appRouter.POST("/activation", userController.Activation)
-	router.appRouter.POST("/forgot-password", userController.ForgotPassword)
+	router.appRouter.POST("/register", userController.Register) // done
+	router.appRouter.POST("/login", userController.Login) // done
+	router.appRouter.GET("/", userController.FindAll) // done
+	router.appRouter.GET("/:id", userController.FindById) // done
+	router.appRouter.PUT("/:id", userController.UpdatePassword) // done
+	router.appRouter.DELETE("/:id", userController.Delete) // done
+	router.appRouter.POST("/activation", userController.Activation) // need to be tested
+	router.appRouter.POST("/forgot-password", userController.ForgotPassword) // done
 
 	return router.appRouter
 }
@@ -40,11 +40,11 @@ func NewHardwareRouter(hardwareController controller.HardwareController) *httpro
 	router := httprouter.New()
 
 	// hardwares endpoint
-	router.GET("/", hardwareController.FindAll)
-	router.GET("/:id", hardwareController.FindHardwareTypeById)
-	router.POST("/", hardwareController.Create)
-	router.PUT("/:id", hardwareController.Update)
-	router.DELETE("/:id", hardwareController.Delete)
+	router.GET("/", hardwareController.FindAll) // done
+	router.GET("/:id", hardwareController.FindHardwareTypeById) // done
+	router.POST("/", hardwareController.Create) // done
+	router.PUT("/:id", hardwareController.Update) // done
+	router.DELETE("/:id", hardwareController.Delete) // done
 
 	return router
 }
@@ -53,11 +53,11 @@ func NewNodeRouter(nodeController controller.NodeController) *httprouter.Router 
 	router := httprouter.New()
 
 	// nodes endpoint
-	router.GET("/", nodeController.FindAll)
-	router.GET("/:id", nodeController.FindById)
-	router.POST("/", nodeController.Create)
-	router.PUT("/:id", nodeController.Update)
-	router.DELETE("/:id", nodeController.Delete)
+	router.GET("/", nodeController.FindAll) // done
+	router.GET("/:id", nodeController.FindById) // done
+	router.POST("/", nodeController.Create) // done
+	router.PUT("/:id", nodeController.Update) // done
+	router.DELETE("/:id", nodeController.Delete) // done
 
 	return router
 }
@@ -66,7 +66,7 @@ func NewChannelRouter(channelController controller.ChannelController) *httproute
 	router := httprouter.New()
 
 	// channels endpoint
-	router.POST("/", channelController.Create)
+	router.POST("/", channelController.Create) // done
 
 	return router
 }

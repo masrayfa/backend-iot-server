@@ -34,14 +34,17 @@ func NewNodeService(repository repository.NodeRepository, hardwareRepository rep
 	}
 }
 
+// need user authentication middleware
 func (service *NodeServiceImpl) FindAll(ctx context.Context, limit int64, idUser int64) ([]domain.NodeWithFeed, error) {
 	err := service.validator.Struct(ctx)
 	helper.PanicIfError(err)
 
 	dbpool := service.db
 
-	currentUser, err := service.userRepository.FindById(ctx, dbpool, idUser)
-	helper.PanicIfError(err)
+	currentUser, ok := ctx.Value("currentUser").(domain.UserRead)
+	if !ok {
+		return []domain.NodeWithFeed{}, errors.New("user not found")
+	}
 
 	log.Println("currentUser: ", currentUser)
 
@@ -58,6 +61,7 @@ func (service *NodeServiceImpl) FindAll(ctx context.Context, limit int64, idUser
 	return nodeChannels, nil
 }
 
+// need user authentication middleware
 func (service *NodeServiceImpl) FindById(ctx context.Context, id int64, limit int64) (domain.NodeWithFeed, error) {
 	err := service.validator.Struct(ctx)
 	helper.PanicIfError(err)
@@ -71,9 +75,12 @@ func (service *NodeServiceImpl) FindById(ctx context.Context, id int64, limit in
 		nodeResponseChannel <- web.NodeResponse{Node: node, Err: err}
 	}()
 
-	currentUser, err := service.userRepository.FindById(ctx, dbpool, id)
-	helper.PanicIfError(err)
-
+	
+	currentUser, ok := ctx.Value("currentUser").(domain.UserRead)
+	if !ok {
+		return domain.NodeWithFeed{}, errors.New("user not found")
+	}
+		
 	nodeResponse := <- nodeResponseChannel
 	node := nodeResponse.Node
 	err = nodeResponse.Err
@@ -94,6 +101,7 @@ func (service *NodeServiceImpl) FindById(ctx context.Context, id int64, limit in
 	return nodeWithFeed, nil
 }
 
+// need user authentication middleware
 func (service *NodeServiceImpl) Create(ctx context.Context, req web.NodeCreateRequest) (nodeCreateRes web.NodeCreateResponse, err error) {
 	err = service.validator.Struct(req)
 	if err != nil {
@@ -116,8 +124,10 @@ func (service *NodeServiceImpl) Create(ctx context.Context, req web.NodeCreateRe
 		return nodeCreateRes, errors.New("sensor hardware id length is not valid")
 	}
 
-	currentUser, err := service.userRepository.FindById(ctx, service.db, req.IdUser)
-	helper.PanicIfError(err)
+	currentUser, ok := ctx.Value("currentUser").(domain.User)
+	if !ok {
+		return nodeCreateRes, errors.New("user not found")
+	}
 	log.Println("currentUser: ", currentUser)
 
 	sensorHardwareIdLength := len(req.IdHardwareSensor)
@@ -171,6 +181,7 @@ func (service *NodeServiceImpl) Create(ctx context.Context, req web.NodeCreateRe
 	return nodeCreateRes, nil	
 }
 
+// need user authentication middleware
 func (service *NodeServiceImpl) Update(ctx context.Context, req web.NodeUpdateRequest, id int64) error {
 	// validate request
 	err := service.validator.Struct(ctx)
@@ -187,13 +198,23 @@ func (service *NodeServiceImpl) Update(ctx context.Context, req web.NodeUpdateRe
 	nodePayload := web.NodeUpdateRequest(req)
 	nodePayload.ChangeSettedField(&node)
 
+	currentUser, ok := ctx.Value("currentUser").(domain.User)
+	if !ok {
+		return errors.New("user not found")
+	}
+
+	if node.IdUser != currentUser.IdUser && !currentUser.IsAdmin {
+		return errors.New("user is not authorized")
+	}
+
 	// update node
-	_, err = service.repository.Update(ctx, dbpool, node, &nodePayload)
+	_, err = service.repository.Update(ctx, dbpool, &node, &nodePayload)
 	helper.PanicIfError(err)
 
 	return nil
 }
 
+// need user authentication middleware
 func (service *NodeServiceImpl) Delete(ctx context.Context,id int64) error {
 	// validate request
 	err := service.validator.Struct(ctx)
@@ -201,6 +222,21 @@ func (service *NodeServiceImpl) Delete(ctx context.Context,id int64) error {
 
 	// establish db connection
 	dbpool := service.db
+
+	// get node
+	node, err := service.repository.FindById(ctx, dbpool, id)
+	helper.PanicIfError(err)
+
+	// get user
+	currentUser, ok := ctx.Value("currentUser").(domain.User)
+	if !ok {
+		return errors.New("user not found")
+	}
+
+	// check if user is authorized
+	if node.IdUser != currentUser.IdUser && !currentUser.IsAdmin {
+		return errors.New("user is not authorized")
+	}
 
 	// delete node
 	err = service.repository.Delete(ctx, dbpool, id)

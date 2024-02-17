@@ -13,6 +13,6 @@ type NodeRepository interface {
 	FindById(ctx context.Context, pool *pgxpool.Pool, id int64) (domain.Node, error)
 	GetHardwareNode(ctx context.Context, pool *pgxpool.Pool, hadrdwareId int64) ([]domain.Node, error)
 	Create(ctx context.Context, pool *pgxpool.Pool, node domain.Node, currentUserId int64) (domain.Node, error)
-	Update(ctx context.Context, pool *pgxpool.Pool, node domain.Node, payload *web.NodeUpdateRequest) (domain.Node, error)
+	Update(ctx context.Context, pool *pgxpool.Pool, node *domain.Node, payload *web.NodeUpdateRequest) (domain.Node, error)
 	Delete(ctx context.Context, pool *pgxpool.Pool, id int64) error
 }

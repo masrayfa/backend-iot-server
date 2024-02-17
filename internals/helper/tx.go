@@ -7,13 +7,13 @@ import (
 )
 
 // CommitOrRollback is a helper function to commit or rollback a transaction
-func CommitOrRollback(ctx context.Context, tx pgx.Tx) {
+func CommitOrRollback(ctx context.Context, tx pgx.Tx) error {
 	err := recover()
 	if err != nil {
 		err := tx.Rollback(ctx)
-		PanicIfError(err)
+		return err 
 	} else {
 		err := tx.Commit(ctx)
-		PanicIfError(err)
+		return err
 	}
 }

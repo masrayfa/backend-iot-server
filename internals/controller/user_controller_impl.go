@@ -56,7 +56,7 @@ func (controller *UserControllerImpl) Register(writer http.ResponseWriter, reque
 	helper.ReadFromRequestBody(request, &userCreateRequest)
 	log.Println("userCreateRequest", userCreateRequest)
 
-	userResponse, err := controller.userService.Register(request.Context(), userCreateRequest)
+	userResponse, err := controller.userService.Register(request.Context(), request, userCreateRequest)
 	helper.PanicIfError(err)
 
 	webReponse := web.WebResponse {
