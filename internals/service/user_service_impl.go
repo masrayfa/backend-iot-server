@@ -137,6 +137,7 @@ func (service *UserServiceImpl) Register(ctx context.Context, req *http.Request,
 	userRead.Email = userResponse.Email
 	userRead.Status = userResponse.Status
 	userRead.IsAdmin = userResponse.IsAdmin
+	log.Println("userRead dari register service", userRead)
 
 	// send email
 	if sendEmail {
@@ -215,6 +216,7 @@ func (service *UserServiceImpl) Activation(ctx context.Context, token string) er
 		http.Error(nil, "User already active", http.StatusBadRequest)
 		panic(err)
 	}
+	log.Println("user dari activation service", user)
 
 	// update status
 	err = service.userRepository.UpdateStatus(ctx, dbpool, user.IdUser, true)

@@ -16,8 +16,10 @@ import (
 func SignUserToken(user domain.UserRead) (string, error) {
 	config := configs.GetConfig()
 
+	log.Println("user dari fungsi sign user token: ", user)
+
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
-		"idUser": user.IdUser,
+		"id_user": user.IdUser,
 		"username": user.Username,
 		"email": user.Email,
 		"status": user.Status,
@@ -55,7 +57,7 @@ func ValidateToken(tokenString string) (user domain.UserRead, err error) {
 
 	// validate claims
 	if claims, ok := token.Claims.(jwt.MapClaims); ok && token.Valid {
-		user.IdUser = int64(claims["idUser"].(float64))
+		user.IdUser = int64(claims["id_user"].(float64))
 		user.Email = claims["email"].(string)
 		user.Username = claims["username"].(string)
 		user.Status = claims["status"].(bool)

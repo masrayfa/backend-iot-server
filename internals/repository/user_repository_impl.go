@@ -133,6 +133,9 @@ func (r *UserRepositoryImpl) Save(ctx context.Context, dbpool *pgxpool.Pool, use
 	if err != nil {
 		return user, err
 	}
+	log.Println("id user dari save repository: ", idUser)
+
+	user.IdUser = idUser
 
 	return user, nil
 }
@@ -163,6 +166,8 @@ func (r *UserRepositoryImpl) Delete(ctx context.Context, dbpool *pgxpool.Pool, i
 
 // UpdateStatus updates a user status
 func (r *UserRepositoryImpl) UpdateStatus(ctx context.Context, dbpool *pgxpool.Pool, id int64, status bool) error {
+	log.Println("update status repository")
+
 	tx, err := dbpool.Begin(ctx)
 	helper.PanicIfError(err)
 	defer helper.CommitOrRollback(ctx, tx)
@@ -170,12 +175,15 @@ func (r *UserRepositoryImpl) UpdateStatus(ctx context.Context, dbpool *pgxpool.P
 	script := "UPDATE user_person SET status = $1 WHERE id_user = $2"
 
 	res, err := tx.Exec(ctx, script, status, id)
-	helper.PanicIfError(err)
-
-	if res.RowsAffected() != 1 {
-		http.Error(nil, fmt.Sprintf("No row affected on update user status with id: %d", id), http.StatusBadRequest)
+	if err != nil {
 		return err
 	}
+	count := res.RowsAffected()
+	if count == 0 {
+		return fmt.Errorf("no row affected on update user status with id: %d", id)
+	}
+
+	log.Println("status berhasil diupdate dari repository")
 
 	return nil
 }
@@ -247,7 +255,7 @@ func (r *UserRepositoryImpl) SendEmailActivation(ctx context.Context, dbpool *pg
 	jwtToken, err := helper.SignUserToken(user)
 	helper.PanicIfError(err)
 
-	urlCode := fmt.Sprintf("%s/activate/%s", config.Server.Domain, jwtToken)
+	urlCode := fmt.Sprintf("%s/api/v1/user/activate?token=%s", config.Server.Domain, jwtToken)
 	subject := "Activation Account"
 	body := fmt.Sprintf(`<html>
 	 	<head>

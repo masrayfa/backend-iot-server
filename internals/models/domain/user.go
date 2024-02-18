@@ -10,9 +10,9 @@ type User struct {
 }
 
 type UserRead struct {
-	IdUser   int64
-	Username string
-	Email    string
-	Status   bool
-	IsAdmin  bool
+	IdUser   int64  `json:"id_user"`
+	Username string `json:"username"`
+	Email    string `json:"email"`
+	Status   bool   `json:"status"`
+	IsAdmin  bool   `json:"is_admin"`
 }

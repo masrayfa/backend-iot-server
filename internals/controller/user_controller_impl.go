@@ -35,7 +35,7 @@ func (controller *UserControllerImpl) FindAll(writer http.ResponseWriter, reques
 }
 
 func (controller *UserControllerImpl) FindById(writer http.ResponseWriter, request *http.Request, params httprouter.Params) {
-	param := params.ByName("id")	
+	param := params.ByName("user_id")	
 	userId, err := strconv.ParseInt(param, 10, 64)
 	helper.PanicIfError(err)
 
@@ -87,10 +87,9 @@ func (controller *UserControllerImpl) Login(writer http.ResponseWriter, request 
 }
 
 func (controller *UserControllerImpl) Activation(writer http.ResponseWriter, request *http.Request, params httprouter.Params) {
-	userValidateRequest := web.UserValidateRequest{}
-	helper.ReadFromRequestBody(request, &userValidateRequest)
+	token := request.URL.Query().Get("token")
 
-	err := controller.userService.Activation(request.Context(), userValidateRequest.Token)
+	err := controller.userService.Activation(request.Context(), token)
 	helper.PanicIfError(err)
 
 	webReponse := web.WebResponse {

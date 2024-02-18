@@ -18,8 +18,8 @@
   "mail": {
     "smtpHost": "smtp.gmail.com",
     "smtpPort": 587,
-    "senderName": "Server IoT IPB<rayfananda1920@gmail.com>",
-    "authenticationMail": "",
+    "senderName": "rayfamas20@gmail.com",
+    "authenticationMail": "rayfamas20@gmail.com",
     "authenticationPassword": ""
   },
   "account": {
