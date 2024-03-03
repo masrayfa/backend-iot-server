@@ -147,11 +147,11 @@ func ValidateUserCredentials(w http.ResponseWriter, r *http.Request) (domain.Use
 		return domain.UserRead{}, errors.New("Unauthorized")
 	}
 
-	log.Println("authorizationCookiesValue: ", authorizationCookiesValue)
+	// log.Println("authorizationCookiesValue: ", authorizationCookiesValue)
 
 	authorizationHeaders, haveAuthorizationHeader := r.Header["Authorization"]
 
-	log.Println("authorizationHeaders: ", authorizationHeaders)
+	// log.Println("authorizationHeaders: ", authorizationHeaders)
 
 	authorizationHeaderValue := ""
 	if !haveAuthorizationHeader && authorizationCookiesValue == "" {
@@ -169,14 +169,14 @@ func ValidateUserCredentials(w http.ResponseWriter, r *http.Request) (domain.Use
 		return domain.UserRead{}, errors.New("Unauthorized")
 	}
 
-	log.Println("authorizationSplit[0]: ", authorizationSplit[0])
+	// log.Println("authorizationSplit[0]: ", authorizationSplit[0])
 
 	authorizationType := authorizationSplit[0]
 	if authorizationType != "Bearer" {
 		return domain.UserRead{}, errors.New("Unauthorized")
 	}
 
-	log.Println("authorizationSplit[1]: ", authorizationSplit[1])
+	// log.Println("authorizationSplit[1]: ", authorizationSplit[1])
 
 	authorizationToken := authorizationSplit[1]
 
@@ -185,7 +185,7 @@ func ValidateUserCredentials(w http.ResponseWriter, r *http.Request) (domain.Use
 		return domain.UserRead{}, err
 	}
 
-	log.Println("user dari middleware validate user credentials: ", user)
+	// log.Println("user dari middleware validate user credentials: ", user)
 
 	return user, nil
 

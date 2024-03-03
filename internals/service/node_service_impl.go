@@ -35,7 +35,7 @@ func NewNodeService(repository repository.NodeRepository, hardwareRepository rep
 }
 
 // need user authentication middleware
-func (service *NodeServiceImpl) FindAll(ctx context.Context, limit int64, idUser int64) ([]domain.NodeWithFeed, error) {
+func (service *NodeServiceImpl) FindAll(ctx context.Context, limit int64) ([]domain.NodeWithFeed, error) {
 	err := service.validator.Struct(ctx)
 	helper.PanicIfError(err)
 
@@ -55,12 +55,11 @@ func (service *NodeServiceImpl) FindAll(ctx context.Context, limit int64, idUser
 	nodes, err := service.repository.FindAll(ctx, dbpool, &currentUser)
 	helper.PanicIfError(err)
 
-	log.Println("nodes: ", nodes)
-	log.Println("nodes id: ", nodes[0].IdNode)
-
 	// get all channel
 	nodeChannels, err := service.channelRepository.GetNodeChannelMultiple(ctx, dbpool, nodes, limit)
 	helper.PanicIfError(err)
+
+	log.Println("node channels dari node all service: ", nodeChannels)
 
 	return nodeChannels, nil
 }

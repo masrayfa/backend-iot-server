@@ -87,8 +87,6 @@ func (r *ChannelRepositoryImpl) GetNodeChannelMultiple(ctx context.Context, pool
 
 	script := `SELECT time, value, id_node FROM feed WHERE id_node = ANY($1)` 
 
-	var nodesWithFeed []domain.NodeWithFeed
-
 	rows, err := tx.Query(ctx, script, idNodes)
 	helper.PanicIfError(err)
 	defer rows.Close()
@@ -99,10 +97,10 @@ func (r *ChannelRepositoryImpl) GetNodeChannelMultiple(ctx context.Context, pool
 		helper.PanicIfError(err)
 
 		nodeIdIndex := mapIdNodes[int64(channel.IdNode)]
-		if limit >= 0 && len(nodeWithFeed[nodeIdIndex].Feed) >= int(limit) {
+		if limit >= 0 && len(nodeWithFeed[nodeIdIndex].Feed) < int(limit) {
 			nodeWithFeed[nodeIdIndex].Feed = append(nodeWithFeed[nodeIdIndex].Feed, channel)
 		}
 	}
 
-	return nodesWithFeed, nil
+	return nodeWithFeed, nil
 }

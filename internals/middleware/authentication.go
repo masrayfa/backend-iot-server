@@ -2,7 +2,6 @@ package middleware
 
 import (
 	"context"
-	"log"
 	"net/http"
 
 	"github.com/masrayfa/internals/dependencies"
@@ -56,7 +55,7 @@ func (m *AuthenticationMiddleware) ValidateUser(next http.Handler) http.Handler 
 			http.Error(writer, result.Err.Error(), http.StatusUnauthorized)
 			return
 		}
-		log.Println("result.User: ", result.User)
+		// log.Println("result.User: ", result.User)
 
 		ctx := request.Context()
 		ctx = context.WithValue(ctx, "currentUser", result.User)

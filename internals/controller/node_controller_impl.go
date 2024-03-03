@@ -26,7 +26,7 @@ func (controller *NodeControllerImpl) FindAll(writer http.ResponseWriter, reques
 
 	log.Println("limit: ", limit)
 
-	node, err := controller.nodeService.FindAll(request.Context(), limit, 1)
+	node, err := controller.nodeService.FindAll(request.Context(), limit)
 	helper.PanicIfError(err)
 
 	webResponse := web.WebResponse{
