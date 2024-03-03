@@ -48,9 +48,6 @@ func (service *ChannelServiceImpl) Create(ctx context.Context, req web.ChannelCr
 	if err != nil {
 		return web.ChannelReadResponse{}, err
 	}
-	if err != nil {
-		return web.ChannelReadResponse{}, err
-	}
 	log.Println("node dari channel service: ", node)
 
 	if currentUser.IdUser != node.IdUser {

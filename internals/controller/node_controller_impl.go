@@ -26,10 +26,6 @@ func (controller *NodeControllerImpl) FindAll(writer http.ResponseWriter, reques
 
 	log.Println("limit: ", limit)
 
-	// findAllReq := web.NodeFindAllReq{}
-	// helper.ReadFromRequestBody(request, &findAllReq)
-	// log.Println("id: ", findAllReq.IdUser)
-
 	node, err := controller.nodeService.FindAll(request.Context(), limit, 1)
 	helper.PanicIfError(err)
 

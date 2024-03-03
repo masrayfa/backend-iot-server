@@ -48,6 +48,10 @@ func (service *NodeServiceImpl) FindAll(ctx context.Context, limit int64, idUser
 
 	log.Println("currentUser: ", currentUser)
 
+	// if currentUser.IsAdmin {
+		
+	// }
+
 	nodes, err := service.repository.FindAll(ctx, dbpool, &currentUser)
 	helper.PanicIfError(err)
 
@@ -124,7 +128,7 @@ func (service *NodeServiceImpl) Create(ctx context.Context, req web.NodeCreateRe
 		return nodeCreateRes, errors.New("sensor hardware id length is not valid")
 	}
 
-	currentUser, ok := ctx.Value("currentUser").(domain.User)
+	currentUser, ok := ctx.Value("currentUser").(domain.UserRead)
 	if !ok {
 		return nodeCreateRes, errors.New("user not found")
 	}
@@ -198,7 +202,7 @@ func (service *NodeServiceImpl) Update(ctx context.Context, req web.NodeUpdateRe
 	nodePayload := web.NodeUpdateRequest(req)
 	nodePayload.ChangeSettedField(&node)
 
-	currentUser, ok := ctx.Value("currentUser").(domain.User)
+	currentUser, ok := ctx.Value("currentUser").(domain.UserRead)
 	if !ok {
 		return errors.New("user not found")
 	}
@@ -228,7 +232,7 @@ func (service *NodeServiceImpl) Delete(ctx context.Context,id int64) error {
 	helper.PanicIfError(err)
 
 	// get user
-	currentUser, ok := ctx.Value("currentUser").(domain.User)
+	currentUser, ok := ctx.Value("currentUser").(domain.UserRead)
 	if !ok {
 		return errors.New("user not found")
 	}

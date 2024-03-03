@@ -12,6 +12,7 @@ import (
 	"github.com/masrayfa/internals/middleware"
 	"github.com/masrayfa/internals/repository"
 	"github.com/masrayfa/internals/service"
+	"github.com/rs/cors"
 )
 
 func main() {
@@ -73,7 +74,7 @@ func main() {
 
 	server := http.Server {
 		Addr: ":8080",
-		Handler: mainRouter.appRouter,
+		Handler: cors.Default().Handler(mainRouter.appRouter),
 	}
 
 	err := server.ListenAndServe()

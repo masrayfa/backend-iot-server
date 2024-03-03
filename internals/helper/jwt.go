@@ -2,6 +2,7 @@ package helper
 
 import (
 	"errors"
+	"fmt"
 	"log"
 	"net/http"
 	"net/url"
@@ -13,51 +14,65 @@ import (
 	"github.com/masrayfa/internals/models/domain"
 )
 
+// func SignUserToken(user domain.UserRead) (string, error) {
+// 	config := configs.GetConfig()
+
+// 	log.Println("user dari fungsi sign user token: ", user)
+
+// 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
+// 		"id_user": user.IdUser,
+// 		"username": user.Username,
+// 		"email": user.Email,
+// 		"status": user.Status,
+// 		"isAdmin": user.IsAdmin,
+// 		"iat": time.Now().Unix(),
+// 	})
+
+// 	tokenString, err := token.SignedString([]byte(config.JWT.SecretKey))
+// 	if err != nil {
+// 		return "", err
+// 	}
+
+// 	return tokenString, nil
+// }
+
 func SignUserToken(user domain.UserRead) (string, error) {
 	config := configs.GetConfig()
-
-	log.Println("user dari fungsi sign user token: ", user)
-
+	// Create a new token object, specifying signing method and the claims
+	// you would like it to contain.
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
-		"id_user": user.IdUser,
+		"idUser":   user.IdUser,
+		"email":    user.Email,
 		"username": user.Username,
-		"email": user.Email,
-		"status": user.Status,
-		"isAdmin": user.IsAdmin,
-		"iat": time.Now().Unix(),
+		"status":   user.Status,
+		"isAdmin":  user.IsAdmin,
+		"iat":      time.Now().Unix(),
 	})
 
+	// Sign and get the complete encoded token as a string using the secret
 	tokenString, err := token.SignedString([]byte(config.JWT.SecretKey))
-	if err != nil {
-		return "", err
-	}
 
-	return tokenString, nil
+	return tokenString, err
 }
+
 
 func ValidateToken(tokenString string) (user domain.UserRead, err error) {
 	config := configs.GetConfig()
-
-	// parse token
+	// Parse and validate the token. KeyFunc will be used to validate the token by returning the secret key.
 	token, err := jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
-		// validate signing method
+		// Validate the algorithm used in the token is the same we used to sign it
 		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
-			return nil, errors.New("invalid token")
+			return nil, fmt.Errorf("unexpected signing method: %v", token.Header["alg"])
 		}
 
-		// return secret key
 		return []byte(config.JWT.SecretKey), nil
 	})
-
 	if err != nil {
-		return domain.UserRead{}, err
+		return user, err
 	}
 
-	log.Println("token dari fungsi validate token: ", token)
-
-	// validate claims
 	if claims, ok := token.Claims.(jwt.MapClaims); ok && token.Valid {
-		user.IdUser = int64(claims["id_user"].(float64))
+		user.IdUser = int64(claims["idUser"].(float64))
 		user.Email = claims["email"].(string)
 		user.Username = claims["username"].(string)
 		user.Status = claims["status"].(bool)
@@ -71,6 +86,44 @@ func ValidateToken(tokenString string) (user domain.UserRead, err error) {
 		return user, errors.New("could not handle token")
 	}
 }
+
+
+// func ValidateToken(tokenString string) (user domain.UserRead, err error) {
+// 	config := configs.GetConfig()
+
+// 	// parse token
+// 	token, err := jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
+// 		// validate signing method
+// 		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
+// 			return nil, errors.New("invalid token")
+// 		}
+
+// 		// return secret key
+// 		return []byte(config.JWT.SecretKey), nil
+// 	})
+
+// 	if err != nil {
+// 		return domain.UserRead{}, err
+// 	}
+
+// 	log.Println("token dari fungsi validate token: ", token)
+
+// 	// validate claims
+// 	if claims, ok := token.Claims.(jwt.MapClaims); ok && token.Valid {
+// 		user.IdUser = int64(claims["id_user"].(float64))
+// 		user.Email = claims["email"].(string)
+// 		user.Username = claims["username"].(string)
+// 		user.Status = claims["status"].(bool)
+// 		user.IsAdmin = claims["isAdmin"].(bool)
+// 		return user, nil
+// 	} else if errors.Is(err, jwt.ErrTokenMalformed) {
+// 		return user, errors.New("invalid token")
+// 	} else if errors.Is(err, jwt.ErrTokenExpired) || errors.Is(err, jwt.ErrTokenNotValidYet) {
+// 		return user, errors.New("token expired")
+// 	} else {
+// 		return user, errors.New("could not handle token")
+// 	}
+// }
 
 func ValidateUserCredentials(w http.ResponseWriter, r *http.Request) (domain.UserRead, error) {
 	authorizationCookies, err := r.Cookie("authorization")
