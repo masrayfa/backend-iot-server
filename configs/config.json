@@ -7,7 +7,7 @@
   },
   "database": {
     "username": "postgres",
-    "password": "root4",
+    "password": "",
     "host": "localhost",
     "port": 5432,
     "name": "icore"
@@ -20,7 +20,7 @@
     "smtpPort": 587,
     "senderName": "rayfamas20@gmail.com",
     "authenticationMail": "rayfamas20@gmail.com",
-    "authenticationPassword": "pvxj xfik meej jlyr"
+    "authenticationPassword": ""
   },
   "account": {
     "adminEmail": "admin@example.com",
