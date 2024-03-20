@@ -150,6 +150,9 @@ func (controller *UserControllerImpl) Delete(writer http.ResponseWriter, request
 	helper.PanicIfError(err)
 
 	err = controller.userService.Delete(request.Context(), int64(userId))
+	if err != nil {
+		helper.PanicIfError(err)
+	}
 
 	webReponse := web.WebResponse {
 		Code: http.StatusOK,

@@ -4,6 +4,7 @@ import (
 	"bytes"
 	_ "embed"
 	"fmt"
+	"log"
 	"os"
 	"path"
 	"strings"
@@ -56,6 +57,7 @@ func init() {
 		fmt.Println(err)
 		os.Exit(1)
 	}
+	log.Println("Work dir: ", work_dir)
 	configSettings := viper.New()
 
 	envPath := path.Join(work_dir, ".env")

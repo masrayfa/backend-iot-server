@@ -15,7 +15,7 @@ var databaseUrl string
 func init() {
 	config := configs.GetConfig()
 	databaseConfig := config.Database
-	databaseUrl = fmt.Sprintf("postgres://%s:%s@%s:%s/%s", databaseConfig.Username, databaseConfig.Password, databaseConfig.Host, databaseConfig.Port, databaseConfig.Name)
+	databaseUrl = fmt.Sprintf("postgres://%s:%s@%s/%s", databaseConfig.Username, databaseConfig.Password, databaseConfig.Host, databaseConfig.Name)
 }
 
 func NewDBPool() *pgxpool.Pool {

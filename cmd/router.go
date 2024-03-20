@@ -1,6 +1,8 @@
 package main
 
 import (
+	"net/http"
+
 	"github.com/julienschmidt/httprouter"
 	"github.com/masrayfa/internals/controller"
 	"github.com/masrayfa/internals/middleware"
@@ -18,6 +20,17 @@ func NewRouter(authMiddleware *middleware.AuthenticationMiddleware) *Router {
 	}
 }
 
+func CheckHealthRouter() *httprouter.Router {
+	router := httprouter.New()
+
+	// health endpoint
+	router.GET("/health", func(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
+		w.WriteHeader(http.StatusOK)
+	})
+
+	return router
+}
+
 func NewUserRouter(userController controller.UserController) *httprouter.Router {
 	router := &Router{
 		appRouter: httprouter.New(),
@@ -28,7 +41,7 @@ func NewUserRouter(userController controller.UserController) *httprouter.Router 
 	router.appRouter.POST("/login", userController.Login) // done
 	router.appRouter.GET("/", userController.FindAll) // done
 	router.appRouter.GET("/activate", userController.Activation) // done
-	router.appRouter.GET("/user/:user_id", userController.FindById) // done
+	router.appRouter.GET("/detail/:user_id", userController.FindById) // done
 	router.appRouter.PUT("/:id", userController.UpdatePassword) // done
 	router.appRouter.DELETE("/:id", userController.Delete) // done
 	router.appRouter.POST("/forgot-password", userController.ForgotPassword) // done

@@ -63,13 +63,12 @@ func (controller *NodeControllerImpl) Create(writer http.ResponseWriter, request
 	nodeCreateRequest := web.NodeCreateRequest{}
 	helper.ReadFromRequestBody(request, &nodeCreateRequest)
 
-	nodeCreateResponse, err := controller.nodeService.Create(request.Context(), nodeCreateRequest)
+	_, err := controller.nodeService.Create(request.Context(), nodeCreateRequest)
 	helper.PanicIfError(err)
 
 	webResponse := web.WebResponse{
 		Code:   http.StatusOK,
 		Status: http.StatusText(http.StatusOK),
-		Data:   nodeCreateResponse,
 	}
 
 	helper.WriteToResponseBody(writer, webResponse)
@@ -89,7 +88,6 @@ func (controller *NodeControllerImpl) Update(writer http.ResponseWriter, request
 	webResponse := web.WebResponse{
 		Code:   http.StatusOK,
 		Status: http.StatusText(http.StatusOK),
-		Data:   nil,
 	}
 
 	log.Println("Node with id: ", id, " has been updated")
