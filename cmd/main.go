@@ -74,7 +74,7 @@ func main() {
 
 	server := http.Server {
 		Addr: ":8080",
-		Handler: cors.Default().Handler(mainRouter.appRouter),
+		Handler: cors.AllowAll().Handler(mainRouter.appRouter),
 	}
 
 	err := server.ListenAndServe()
