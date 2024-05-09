@@ -32,22 +32,6 @@ func (m *AuthenticationMiddleware) validateUserAndSetUserInHeader(next http.Hand
 	}
 }
 
-// func (m *AuthenticationMiddleware) validateUserAndSetUserInHeader(next http.Handler) http.Handler {
-// 	return http.HandlerFunc(func(writer http.ResponseWriter, request *http.Request) {
-// 		currentUser, err := helper.ValidateUserCredentials(writer, request)
-// 		if err != nil {
-// 			http.Error(writer, err.Error(), http.StatusUnauthorized)
-// 			return
-// 		}
-
-// 		ctx := request.Context()
-// 		ctx = context.WithValue(ctx, "currentUser", currentUser)
-// 		request = request.WithContext(ctx)
-
-// 		next.ServeHTTP(writer, request)
-// 	})
-// }
-
 func (m *AuthenticationMiddleware) ValidateUser(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(writer http.ResponseWriter, request *http.Request) {
 		result := m.validateUserAndSetUserInHeader(next, writer, request)
@@ -55,23 +39,11 @@ func (m *AuthenticationMiddleware) ValidateUser(next http.Handler) http.Handler 
 			http.Error(writer, result.Err.Error(), http.StatusUnauthorized)
 			return
 		}
-		// log.Println("result.User: ", result.User)
-
 		ctx := request.Context()
 		ctx = context.WithValue(ctx, "currentUser", result.User)
 		request = request.WithContext(ctx)
 
 		next.ServeHTTP(writer, request)
-
-		// old code
-		// ctx := request.Context()
-		// currentUser, ok := ctx.Value("currentUser").(domain.UserRead)
-		// if !ok {
-		// 	http.Error(writer, "Unauthorized", http.StatusUnauthorized)
-		// 	return
-		// }
-
-		// next.ServeHTTP(writer, request.WithContext(context.WithValue(ctx, "currentUser", currentUser)))
 	})
 }
 
@@ -93,21 +65,6 @@ func (m *AuthenticationMiddleware) ValidateAdmin(next http.Handler) http.Handler
 		request = request.WithContext(ctx)
 
 		next.ServeHTTP(writer, request)
-
-		// old code
-		// ctx := request.Context()
-		// currentUser, ok := ctx.Value("currentUser").(domain.UserRead)
-		// if !ok {
-		// 	http.Error(writer, "Unauthorized", http.StatusUnauthorized)
-		// 	return
-		// }
-
-		// if !currentUser.IsAdmin {
-		// 	http.Error(writer, "Forbidden", http.StatusForbidden)
-		// 	return
-		// }
-
-		// next.ServeHTTP(writer, request.WithContext(context.WithValue(ctx, "currentUser", currentUser)))
 	})
 }
 
@@ -135,20 +92,5 @@ func (m *AuthenticationMiddleware) ValidateUserSameAsUrlIdOrAdmin(next http.Hand
 		request = request.WithContext(ctx)
 
 		next.ServeHTTP(writer, request)
-
-		// old code
-		// ctx := request.Context()
-		// currentUser, ok := ctx.Value("currentUser").(domain.UserRead)
-		// if !ok {
-		// 	http.Error(writer, "Unauthorized", http.StatusUnauthorized)
-		// 	return
-		// }
-
-		// if !currentUser.IsAdmin && currentUser.IdUser != id {
-		// 	http.Error(writer, "Forbidden", http.StatusForbidden)
-		// 	return
-		// }
-
-		// next.ServeHTTP(writer, request.WithContext(context.WithValue(ctx, "currentUser", currentUser)))
 	})
 }
