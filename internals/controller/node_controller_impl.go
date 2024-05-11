@@ -113,3 +113,20 @@ func (controller *NodeControllerImpl) Delete(writer http.ResponseWriter, request
 
 	helper.WriteToResponseBody(writer, webResponse)
 }
+
+func (controller *NodeControllerImpl) FindHardwareNode(writer http.ResponseWriter, request *http.Request, params httprouter.Params) {
+	param := params.ByName("id")
+	id, err := strconv.ParseInt(param, 10, 64)
+	helper.PanicIfError(err)
+
+	hardware, err := controller.nodeService.FindHardwareNode(request.Context(), id)
+	helper.PanicIfError(err)
+
+	webResponse := web.WebResponse{
+		Code:   http.StatusOK,
+		Status: http.StatusText(http.StatusOK),
+		Data:   hardware,
+	}
+
+	helper.WriteToResponseBody(writer, webResponse)
+}

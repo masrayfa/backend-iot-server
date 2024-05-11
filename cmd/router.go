@@ -67,7 +67,8 @@ func NewNodeRouter(nodeController controller.NodeController) *httprouter.Router 
 
 	// nodes endpoint
 	router.GET("/", nodeController.FindAll) // done
-	router.GET("/:id", nodeController.FindById) // done
+	router.GET("/by/:id", nodeController.FindById) // done
+	router.GET("/hardware/:id", nodeController.FindHardwareNode) // done
 	router.POST("/", nodeController.Create) // done
 	router.PUT("/:id", nodeController.Update) // done
 	router.DELETE("/:id", nodeController.Delete) // done
