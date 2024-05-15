@@ -165,3 +165,17 @@ func (r *HardwareRepositoryImpl) Delete(ctx context.Context, pool *pgxpool.Pool 
 
 	return nil
 }
+
+func (r *HardwareRepositoryImpl) FindHardwareSensor(ctx context.Context, pool *pgxpool.Pool , id int64) (domain.Hardware, error) {
+	script := "SELECT id_hardware, name, type FROM hardware WHERE id_hardware = $1"
+	
+	tx, err := pool.Begin(ctx)
+	helper.PanicIfError(err)
+	defer helper.CommitOrRollback(ctx, tx)
+
+	var hardware domain.Hardware
+	err = tx.QueryRow(ctx, script, id).Scan(&hardware.IdHardware, &hardware.Name, &hardware.Type)
+	helper.PanicIfError(err)
+
+	return hardware, nil
+}

@@ -149,13 +149,6 @@ func (service *HardwareServiceImpl) Update(ctx context.Context, req web.Hardware
 
 	hardwareDomain := domain.Hardware(hardware)
 
-	// hardwareDomain := domain.Hardware {
-	// 	IdHardware: int64(id),
-	// 	Name: req.Name,
-	// 	Type: req.Type,
-	// 	Description: req.Description,
-	// }
-
 	err = service.repository.Update(ctx, dbpool, hardwareDomain)
 	helper.PanicIfError(err)
 

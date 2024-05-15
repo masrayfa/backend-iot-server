@@ -65,7 +65,7 @@ func (service *NodeServiceImpl) FindAll(ctx context.Context, limit int64) ([]dom
 }
 
 // need user authentication middleware
-func (service *NodeServiceImpl) FindById(ctx context.Context, id int64, limit int64) (domain.NodeWithFeed, error) {
+func (service *NodeServiceImpl) FindById(ctx context.Context, id int64, limit int64) (domain.NodeDetail, error) {
 	err := service.validator.Struct(ctx)
 	helper.PanicIfError(err)
 
@@ -81,7 +81,7 @@ func (service *NodeServiceImpl) FindById(ctx context.Context, id int64, limit in
 	
 	currentUser, ok := ctx.Value("currentUser").(domain.UserRead)
 	if !ok {
-		return domain.NodeWithFeed{}, errors.New("user not found")
+		return domain.NodeDetail{}, errors.New("user not found")
 	}
 		
 	nodeResponse := <- nodeResponseChannel
@@ -90,18 +90,37 @@ func (service *NodeServiceImpl) FindById(ctx context.Context, id int64, limit in
 	helper.PanicIfError(err)
 
 	if node.IdUser != currentUser.IdUser && !currentUser.IsAdmin {
-		return domain.NodeWithFeed{}, errors.New("user is not authorized")
+		return domain.NodeDetail{}, errors.New("user is not authorized")
 	}
 
-	feed, err := service.channelRepository.GetNodeChannel(ctx, dbpool, id, limit)
+	// feed, err := service.channelRepository.GetNodeChannel(ctx, dbpool, id, limit)
+	// helper.PanicIfError(err)
+
+	// nodeWithFeed := domain.NodeWithFeed{
+	// 	Node: node,
+	// 	Feed: feed,
+	// }
+	hardware, err := service.hardwareRepository.FindById(ctx, dbpool, node.IdHardwareNode)
 	helper.PanicIfError(err)
 
-	nodeWithFeed := domain.NodeWithFeed{
-		Node: node,
-		Feed: feed,
+	var fieldSensor []domain.Hardware
+	for _, idHardwareSensor := range node.IdHardwareSensor {
+		hardware, err := service.hardwareRepository.FindById(ctx, dbpool, idHardwareSensor)
+		helper.PanicIfError(err)
+		fieldSensor = append(fieldSensor, hardware)
 	}
 
-	return nodeWithFeed, nil
+	var nodeDetail domain.NodeDetail
+	nodeDetail = domain.NodeDetail{
+		IdNode: node.IdNode,
+		Name: node.Name,
+		Location: node.Location,
+		IdHardwareNode: node.IdHardwareNode,
+		FieldSensor: fieldSensor,
+		Hardware: hardware,
+	}
+
+	return nodeDetail, nil
 }
 
 // need user authentication middleware
@@ -248,7 +267,7 @@ func (service *NodeServiceImpl) Delete(ctx context.Context,id int64) error {
 	return nil
 }
 
-func (service *NodeServiceImpl) FindHardwareNode(ctx context.Context, id int64) ([]web.NodeByHardwareResponse, error) {
+func (service *NodeServiceImpl) FindHardwareNode(ctx context.Context, id int64) (web.NodeByHardwareResponse, error) {
 	err := service.validator.Struct(ctx)
 	helper.PanicIfError(err)
 
@@ -256,20 +275,28 @@ func (service *NodeServiceImpl) FindHardwareNode(ctx context.Context, id int64) 
 
 	currentUser, ok := ctx.Value("currentUser").(domain.UserRead)
 	if !ok {
-		return nil, errors.New("user not found")
+		return web.NodeByHardwareResponse{}, errors.New("user not found")
 	}
 	
-
+	hardware, err := service.hardwareRepository.FindById(ctx, dbpool, id)
+	helper.PanicIfError(err)
+	
+	// get hardware node
 	nodes, err := service.repository.FindHardwareNode(ctx, dbpool, currentUser.IdUser, id)
 	helper.PanicIfError(err)
 
-	nodeHardwareRes := make([]web.NodeByHardwareResponse, 0)
+	nodeHardware := make([]web.NodeByHardware,0)
 	for _, node := range nodes {
-		nodeHardwareRes = append(nodeHardwareRes, web.NodeByHardwareResponse{
+		nodeHardware = append(nodeHardware, web.NodeByHardware{
 			IdNode: node.IdNode,
 			Name: node.Name,
 			Location: node.Location,
 		})
+	}
+
+	nodeHardwareRes := web.NodeByHardwareResponse{
+		Hardware: hardware,
+		Node: nodeHardware,
 	}
 
 	return nodeHardwareRes, nil

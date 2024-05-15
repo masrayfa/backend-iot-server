@@ -54,7 +54,8 @@ func NewHardwareRouter(hardwareController controller.HardwareController) *httpro
 
 	// hardwares endpoint
 	router.GET("/", hardwareController.FindAll) // done
-	router.GET("/:id", hardwareController.FindHardwareTypeById) // done
+	router.GET("/by/:id", hardwareController.FindById) // done
+	router.GET("/type/:id", hardwareController.FindHardwareTypeById) // done
 	router.POST("/", hardwareController.Create) // done
 	router.PUT("/:id", hardwareController.Update) // done
 	router.DELETE("/:id", hardwareController.Delete) // done

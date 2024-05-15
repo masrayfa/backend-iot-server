@@ -14,6 +14,7 @@ type HardwareRepository interface {
 	FindAllSensor(ctx context.Context, pool *pgxpool.Pool) ([]domain.Hardware, error)
 	FindById(ctx context.Context, pool *pgxpool.Pool, id int64) (domain.Hardware, error)
 	FindHardwareTypeById(ctx context.Context, pool *pgxpool.Pool, id int64) (string, error)
+	FindHardwareSensor(ctx context.Context, pool *pgxpool.Pool, id int64) (domain.Hardware, error)
 	Create(ctx context.Context, pool *pgxpool.Pool , hardware domain.Hardware) (domain.Hardware, error)
 	Update(ctx context.Context, pool *pgxpool.Pool , hardware domain.Hardware) error
 	Delete(ctx context.Context, pool *pgxpool.Pool, id int64) error
