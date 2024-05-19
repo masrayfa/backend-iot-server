@@ -154,7 +154,7 @@ func (n *NodeRepositoryImpl) Delete(ctx context.Context, pool *pgxpool.Pool, id 
 	helper.PanicIfError(err)
 	defer helper.CommitOrRollback(ctx, tx)
 
-	script := "DELETE FROM nodes WHERE id = $1"
+	script := "DELETE FROM node WHERE id_node = $1"
 
 	_, err = tx.Exec(ctx, script, id)
 	if err != nil {

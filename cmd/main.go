@@ -72,9 +72,16 @@ func main() {
 	// main endpoint channels
 	mainRouter.appRouter.Handler("POST", "/api/v1/channel/*path", http.StripPrefix("/api/v1/channel", authenticationMiddleware.ValidateUser(channelRouter)))
 
+	options := cors.Options{
+		AllowedOrigins: []string{"*"},
+		AllowedMethods: []string{"GET", "POST", "PUT", "DELETE", "HEAD", "PATCH"},
+		AllowedHeaders: []string{"*"},
+		AllowCredentials: true,
+	}
+
 	server := http.Server {
 		Addr: ":8080",
-		Handler: cors.AllowAll().Handler(mainRouter.appRouter),
+		Handler: cors.New(options).Handler(mainRouter.appRouter),
 	}
 
 	err := server.ListenAndServe()
