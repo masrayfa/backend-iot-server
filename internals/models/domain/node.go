@@ -22,12 +22,13 @@ type FieldSensor struct {
 }
 
 type NodeDetail struct {
-	IdNode         int64      `json:"id_node"`
-	Name           string     `json:"name"`
-	Location       string     `json:"location"`
-	IdHardwareNode int64      `json:"id_hardware"`
-	FieldSensor    []Hardware `json:"field_sensor"`
-	Hardware       Hardware   `json:"hardware"`
+	IdNode           int64    `json:"id_node"`
+	Name             string   `json:"name"`
+	Location         string   `json:"location"`
+	IdHardwareNode   int64    `json:"id_hardware"`
+	FieldSensor      []string `json:"field_sensor"`
+	IdHardwareSensor []int64  `json:"id_hardware_sensor"`
+	Hardware         Hardware `json:"hardware"`
 }
 
 type NodeWithFeedV2 struct {

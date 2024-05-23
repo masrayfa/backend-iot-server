@@ -103,12 +103,12 @@ func (service *NodeServiceImpl) FindById(ctx context.Context, id int64, limit in
 	hardware, err := service.hardwareRepository.FindById(ctx, dbpool, node.IdHardwareNode)
 	helper.PanicIfError(err)
 
-	var fieldSensor []domain.Hardware
-	for _, idHardwareSensor := range node.IdHardwareSensor {
-		hardware, err := service.hardwareRepository.FindById(ctx, dbpool, idHardwareSensor)
-		helper.PanicIfError(err)
-		fieldSensor = append(fieldSensor, hardware)
-	}
+	// var fieldSensor []domain.Hardware
+	// for _, idHardwareSensor := range node.IdHardwareSensor {
+	// 	hardware, err := service.hardwareRepository.FindById(ctx, dbpool, idHardwareSensor)
+	// 	helper.PanicIfError(err)
+	// 	fieldSensor = append(fieldSensor, hardware)
+	// }
 
 	var nodeDetail domain.NodeDetail
 	nodeDetail = domain.NodeDetail{
@@ -116,7 +116,8 @@ func (service *NodeServiceImpl) FindById(ctx context.Context, id int64, limit in
 		Name: node.Name,
 		Location: node.Location,
 		IdHardwareNode: node.IdHardwareNode,
-		FieldSensor: fieldSensor,
+		FieldSensor: node.FieldSensor,
+		IdHardwareSensor: node.IdHardwareSensor,
 		Hardware: hardware,
 	}
 

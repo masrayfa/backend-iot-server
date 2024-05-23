@@ -6,10 +6,10 @@
     "env": "test"
   },
   "database": {
-    "username": "iot-adm",
-    "password": "h38VEnANYaQC",
-    "host": "ep-sweet-leaf-a14yl7n1.ap-southeast-1.pg.koyeb.app",
-    "name": "koyebdb"
+    "username": "postgres",
+    "password": "root4",
+    "host": "localhost",
+    "name": "icore"
   },
   "jwt": {
     "secretKey": "b=(^.t6J.#LX3y~h*5u=Kk2uPRi2krHBOyD.IQ:Wd`|q0`y(?SL}`V#2$6r#wp@"
