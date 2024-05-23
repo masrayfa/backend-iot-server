@@ -158,5 +158,15 @@ func (service *HardwareServiceImpl) Update(ctx context.Context, req web.Hardware
 }
 
 func (service *HardwareServiceImpl) Delete(ctx context.Context, id int64) error {
-	panic("implement me")
+	err := service.validate.Struct(ctx)
+	helper.PanicIfError(err)
+
+	dbpool := service.db
+
+	err = service.repository.Delete(ctx, dbpool, id)
+	helper.PanicIfError(err)
+
+	log.Println("Hardware with id: ", id, " has been deleted")
+
+	return nil
 }
