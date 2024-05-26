@@ -189,7 +189,7 @@ func (r *UserRepositoryImpl) UpdateStatus(ctx context.Context, dbpool *pgxpool.P
 }
 
 // UpdatePassword updates a user password
-func (r *UserRepositoryImpl) UpdatePassword(ctx context.Context, dbpool *pgxpool.Pool, id int64, password string) error {
+func (r *UserRepositoryImpl) UpdatePassword(ctx context.Context, dbpool *pgxpool.Pool, id int64, password string) (string, error) {
 	tx, err := dbpool.Begin(ctx)
 	helper.PanicIfError(err)
 	defer helper.CommitOrRollback(ctx, tx)
@@ -204,10 +204,10 @@ func (r *UserRepositoryImpl) UpdatePassword(ctx context.Context, dbpool *pgxpool
 
 	if res.RowsAffected() != 1 {
 		http.Error(nil, fmt.Sprintf("No row affected on update user password with id: %d", id), http.StatusBadRequest)
-		return err
+		return "", err
 	}
 
-	return nil
+	return password, nil
 }
 
 func (r *UserRepositoryImpl) MatchPassword(ctx context.Context, dbpool *pgxpool.Pool, id int64, password string) error {

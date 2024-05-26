@@ -227,7 +227,7 @@ func (service *UserServiceImpl) Activation(ctx context.Context, token string) er
 	return nil
 }
 
-func (service *UserServiceImpl) ForgotPassword(ctx context.Context,req web.UserForgotPasswordRequest) error {
+func (service *UserServiceImpl) ForgotPassword(ctx context.Context,req web.UserForgotPasswordRequest) (string, error) {
 	err := service.validate.Struct(ctx)
 	helper.PanicIfError(err)
 
@@ -258,7 +258,7 @@ func (service *UserServiceImpl) ForgotPassword(ctx context.Context,req web.UserF
 	log.Println("newPassword", newPassword)
 
 	// update password
-	err = service.userRepository.UpdatePassword(ctx, dbpool, user.IdUser, newPassword)
+	res, err := service.userRepository.UpdatePassword(ctx, dbpool, user.IdUser, newPassword)
 	helper.PanicIfError(err)
 
 	// generate token
@@ -268,7 +268,7 @@ func (service *UserServiceImpl) ForgotPassword(ctx context.Context,req web.UserF
 	// send email
 	log.Println("token", token)
 
-	return nil
+	return res, nil 
 }
 
 func (service *UserServiceImpl) MatchPassword(ctx context.Context,id int64, password string) error {
@@ -291,7 +291,7 @@ func (service *UserServiceImpl) MatchPassword(ctx context.Context,id int64, pass
 	return nil
 }
 
-func (service *UserServiceImpl) UpdatePassword(ctx context.Context,id int64, password string) error {
+func (service *UserServiceImpl) UpdatePassword(ctx context.Context,id int64, password string) error{
 	err := service.validate.Struct(ctx)
 	helper.PanicIfError(err)
 
@@ -299,7 +299,7 @@ func (service *UserServiceImpl) UpdatePassword(ctx context.Context,id int64, pas
 	helper.PanicIfError(err)
 
 	// update password
-	err = service.userRepository.UpdatePassword(ctx, dbpool, id, password)
+	_, err = service.userRepository.UpdatePassword(ctx, dbpool, id, password)
 	helper.PanicIfError(err)
 
 	log.Println("password berhasil diupdate")

@@ -105,13 +105,15 @@ func (controller *UserControllerImpl) ForgotPassword(writer http.ResponseWriter,
 	forgotPasswordRequest := web.UserForgotPasswordRequest{}
 	helper.ReadFromRequestBody(request, &forgotPasswordRequest)
 
-	err := controller.userService.ForgotPassword(request.Context(), forgotPasswordRequest)
+	res, err := controller.userService.ForgotPassword(request.Context(), forgotPasswordRequest)
 	helper.PanicIfError(err)
 
 	webReponse := web.WebResponse {
-		Code: http.StatusOK,
+		Code:   http.StatusOK,
 		Status: http.StatusText(http.StatusOK),
-		Data: nil,
+		Data: map[string]interface{}{
+			"newPassword": res,
+		},
 	}
 
 	helper.WriteToResponseBody(writer, webReponse)
