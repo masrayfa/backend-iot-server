@@ -43,7 +43,7 @@ func (n *NodeRepositoryImpl) FindAll(ctx context.Context, pool *pgxpool.Pool, cu
 
 	for rows.Next() {
 		var node domain.Node
-		// Scan ini harus sesuai dengan urutan kolom di tabel node di database postgres
+		// Scan ini rus sesuai dengan urutan kolom di tabel node di database postgres
 		err := rows.Scan(&node.IdNode, &node.IdUser, &node.IdHardwareNode, &node.Name, &node.Location, &node.IdHardwareSensor, &node.FieldSensor, &node.IsPublic)
 		if err != nil {
 			return nil, err
@@ -135,7 +135,7 @@ func (n *NodeRepositoryImpl) Update(ctx context.Context, pool *pgxpool.Pool, nod
 	helper.PanicIfError(err)
 	defer helper.CommitOrRollback(ctx, tx)
 
-	script := "UPDATE node SET name = $1, location = $2, id_hardware_node = $3, id_hardware_sensor = $4, field_sensor = $5 WHERE id = $6"
+	script := "UPDATE node SET name = $1, location = $2, id_hardware_node = $3, id_hardware_sensor = $4, field_sensor = $5 WHERE id_node = $6"
 
 	res, err := tx.Exec(ctx, script, payload.Name, payload.Location, payload.IdHardwareNode, payload.IdHardwareSensor, payload.FieldSensor, node.IdNode)
 	helper.PanicIfError(err)

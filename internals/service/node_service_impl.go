@@ -3,6 +3,7 @@ package service
 import (
 	"context"
 	"errors"
+	"fmt"
 	"log"
 	"strings"
 
@@ -229,6 +230,7 @@ func (service *NodeServiceImpl) Update(ctx context.Context, req web.NodeUpdateRe
 	if node.IdUser != currentUser.IdUser && !currentUser.IsAdmin {
 		return errors.New("user is not authorized")
 	}
+	fmt.Println("current user: ", currentUser)
 
 	// update node
 	_, err = service.repository.Update(ctx, dbpool, &node, &nodePayload)
