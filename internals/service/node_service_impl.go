@@ -66,7 +66,7 @@ func (service *NodeServiceImpl) FindAll(ctx context.Context, limit int64) ([]dom
 }
 
 // need user authentication middleware
-func (service *NodeServiceImpl) FindById(ctx context.Context, id int64, limit int64) (domain.NodeDetail, error) {
+func (service *NodeServiceImpl) FindById(ctx context.Context, id int64, limit int64) (domain.NodeWithFeed, error) {
 	err := service.validator.Struct(ctx)
 	helper.PanicIfError(err)
 
@@ -82,7 +82,7 @@ func (service *NodeServiceImpl) FindById(ctx context.Context, id int64, limit in
 	
 	currentUser, ok := ctx.Value("currentUser").(domain.UserRead)
 	if !ok {
-		return domain.NodeDetail{}, errors.New("user not found")
+		return domain.NodeWithFeed{}, errors.New("user not found")
 	}
 		
 	nodeResponse := <- nodeResponseChannel
@@ -91,18 +91,18 @@ func (service *NodeServiceImpl) FindById(ctx context.Context, id int64, limit in
 	helper.PanicIfError(err)
 
 	if node.IdUser != currentUser.IdUser && !currentUser.IsAdmin {
-		return domain.NodeDetail{}, errors.New("user is not authorized")
+		return domain.NodeWithFeed{}, errors.New("user is not authorized")
 	}
 
-	// feed, err := service.channelRepository.GetNodeChannel(ctx, dbpool, id, limit)
-	// helper.PanicIfError(err)
-
-	// nodeWithFeed := domain.NodeWithFeed{
-	// 	Node: node,
-	// 	Feed: feed,
-	// }
-	hardware, err := service.hardwareRepository.FindById(ctx, dbpool, node.IdHardwareNode)
+	feed, err := service.channelRepository.GetNodeChannel(ctx, dbpool, id, limit)
 	helper.PanicIfError(err)
+
+	nodeWithFeed := domain.NodeWithFeed{
+		Node: node,
+		Feed: feed,
+	}
+	// hardware, err := service.hardwareRepository.FindById(ctx, dbpool, node.IdHardwareNode)
+	// helper.PanicIfError(err)
 
 	// var fieldSensor []domain.Hardware
 	// for _, idHardwareSensor := range node.IdHardwareSensor {
@@ -111,18 +111,7 @@ func (service *NodeServiceImpl) FindById(ctx context.Context, id int64, limit in
 	// 	fieldSensor = append(fieldSensor, hardware)
 	// }
 
-	var nodeDetail domain.NodeDetail
-	nodeDetail = domain.NodeDetail{
-		IdNode: node.IdNode,
-		Name: node.Name,
-		Location: node.Location,
-		IdHardwareNode: node.IdHardwareNode,
-		FieldSensor: node.FieldSensor,
-		IdHardwareSensor: node.IdHardwareSensor,
-		Hardware: hardware,
-	}
-
-	return nodeDetail, nil
+	return nodeWithFeed, nil
 }
 
 // need user authentication middleware
