@@ -47,7 +47,7 @@ func (r *ChannelRepositoryImpl) GetNodeChannel(ctx context.Context, pool *pgxpoo
 	if limit >= 0 {
 		script += " LIMIT " + strconv.Itoa(int(limit))
 	}
-	rows, err := tx.Query(ctx, script, limit)
+	rows, err := tx.Query(ctx, script, nodeId)
 	helper.PanicIfError(err)
 	defer rows.Close()
 

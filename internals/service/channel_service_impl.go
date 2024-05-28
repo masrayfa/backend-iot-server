@@ -3,7 +3,6 @@ package service
 import (
 	"context"
 	"errors"
-	"log"
 
 	"github.com/go-playground/validator"
 	"github.com/jackc/pgx/v5/pgxpool"
@@ -37,7 +36,7 @@ func (service *ChannelServiceImpl) Create(ctx context.Context, req web.ChannelCr
 	// 	err error
 	// }
 
-	log.Println("req dari channel service: ", req)
+	// log.Println("req dari channel service: ", req)
 
 	currentUser, ok := ctx.Value("currentUser").(domain.UserRead)
 	if !ok {
@@ -48,11 +47,11 @@ func (service *ChannelServiceImpl) Create(ctx context.Context, req web.ChannelCr
 	if err != nil {
 		return web.ChannelReadResponse{}, err
 	}
-	log.Println("node dari channel service: ", node)
+	// log.Println("node dari channel service: ", node)
 
 	if currentUser.IdUser != node.IdUser {
-		log.Println("currentUser.IdUser: ", currentUser.IdUser)
-		log.Println("node.IdUser: ", node.IdUser)
+		// log.Println("currentUser.IdUser: ", currentUser.IdUser)
+		// log.Println("node.IdUser: ", node.IdUser)
 		return web.ChannelReadResponse{}, errors.New("current user is not the owner of the node")
 	}
 
