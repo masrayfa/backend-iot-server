@@ -47,7 +47,7 @@ func (r *HardwareRepositoryImpl) FindAllHardware(ctx context.Context, pool *pgxp
 }
 
 func (r *HardwareRepositoryImpl) FindAllNode(ctx context.Context, pool *pgxpool.Pool ) ([]domain.Hardware, error) {
-	sqlStatement := `SELECT * FROM hardware WHERE lower(type) = 'single-board computer' or lower(type) = 'microcontroller'`
+	sqlStatement := `SELECT * FROM hardware WHERE lower(type) = 'single-board computer' or lower(type) = 'microcontroller unit'`
 	return r.FindAllItem(ctx, pool, sqlStatement)
 
 	// Basic query and logic
