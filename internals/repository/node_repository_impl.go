@@ -35,7 +35,7 @@ func (n *NodeRepositoryImpl) FindAll(ctx context.Context, pool *pgxpool.Pool, cu
 		rows, err = tx.Query(ctx, script)
 		helper.PanicIfError(err)
 	} else { // if user is not admin, show only nodes that belong to user
-		script = `SELECT * FROM "node" WHERE id_user=$1 OR is_public=true`
+		script = `SELECT * FROM "node" WHERE id_user=$1`
 		rows, err = tx.Query(ctx, script, currentUser.IdUser)
 		helper.PanicIfError(err)
 	}
