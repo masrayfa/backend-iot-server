@@ -2,6 +2,7 @@ package service
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"log"
 	"net/http"
@@ -34,12 +35,16 @@ func NewUserService(userRepository repository.UserRepository, db *pgxpool.Pool, 
 
 func (service *UserServiceImpl) FindAll(ctx context.Context) ([]web.UserRead, error) {
 	err := service.validate.Struct(ctx)
-	helper.PanicIfError(err)
-
+	if err != nil {
+		return nil, errors.New("error when validate context")
+	}
+	
 	dbpool := service.db
 
 	users, err := service.userRepository.FindAll(ctx, dbpool)
-	helper.PanicIfError(err)
+	if err != nil {
+		return nil, errors.New("error when find all user")
+	}
 
 	var userResponses []web.UserRead
 	for _, user := range users {
@@ -57,12 +62,16 @@ func (service *UserServiceImpl) FindAll(ctx context.Context) ([]web.UserRead, er
 
 func (service *UserServiceImpl) FindById(ctx context.Context, id int64) (web.UserRead, error) {
 	err := service.validate.Struct(ctx)
-	helper.PanicIfError(err)
+	if err != nil {
+		return web.UserRead{}, errors.New("error when validate context")
+	}
 
 	dbpool := service.db
 
 	user, err := service.userRepository.FindById(ctx, dbpool, id)
-	helper.PanicIfError(err)
+	if err != nil {
+		return web.UserRead{}, errors.New("error when find user by id")
+	}
 
 	userResponse := web.UserRead {
 		IdUser: user.IdUser,
@@ -78,7 +87,9 @@ func (service *UserServiceImpl) FindById(ctx context.Context, id int64) (web.Use
 func (service *UserServiceImpl) Register(ctx context.Context, req *http.Request, payload web.UserCreateRequest) (web.UserRead, error) {
 	// validate request
 	err := service.validate.Struct(req)
-	helper.PanicIfError(err)
+	if err != nil {
+		return web.UserRead{}, errors.New("error when validate request")
+	}
 
 	// establish db connection
 	dbpool := service.db
@@ -96,8 +107,7 @@ func (service *UserServiceImpl) Register(ctx context.Context, req *http.Request,
 		log.Println("username tidak ada")
 	} 
 	if err != nil {
-		http.Error(nil, "Username already exists", http.StatusBadRequest)
-		panic(err)
+		return web.UserRead{}, errors.New("error when find by username")
 	}
 	log.Println("username pass")
 
@@ -106,14 +116,15 @@ func (service *UserServiceImpl) Register(ctx context.Context, req *http.Request,
 		log.Println("email tidak ada")
 	}
 	if err != nil {
-		http.Error(nil, "Email already exists", http.StatusBadRequest)
-		panic(err)
+		return web.UserRead{}, errors.New("error when find by email")
 	}
 	log.Println("email pass")
 
 	// save user
 	res, err := service.userRepository.Save(ctx, dbpool, user)
-	helper.PanicIfError(err)
+	if err != nil {
+		return web.UserRead{}, errors.New("error when save user")
+	}
 	fmt.Println("res", res)
 
 	// convert user to user response
@@ -127,8 +138,7 @@ func (service *UserServiceImpl) Register(ctx context.Context, req *http.Request,
 
 	sendEmail, err := strconv.ParseBool(req.URL.Query().Get("send_email"))
 	if err != nil {
-		http.Error(nil, "Invalid send_email", http.StatusBadRequest)
-		panic(err)
+		return web.UserRead{}, errors.New("error when parse bool")
 	}
 
 	var userRead domain.UserRead
@@ -143,8 +153,7 @@ func (service *UserServiceImpl) Register(ctx context.Context, req *http.Request,
 	if sendEmail {
 		err := service.userRepository.SendEmailActivation(ctx, dbpool, userRead)
 		if err != nil {
-			http.Error(nil, "Failed to send activation email", http.StatusBadRequest)
-			panic(err)
+			return web.UserRead{}, errors.New("error when send email")
 		}
 	}
 
@@ -153,8 +162,7 @@ func (service *UserServiceImpl) Register(ctx context.Context, req *http.Request,
     if config.Server.Env == "test" {
         jwt, err := helper.SignUserToken(userRead)
         if err != nil {
-            http.Error(nil, "Failed to generate JWT token", http.StatusInternalServerError)
-			panic(err)
+			return web.UserRead{}, errors.New("error when sign user token")
         }
         response += fmt.Sprintf(". Token: %s|", jwt)
     }
@@ -166,31 +174,35 @@ func (service *UserServiceImpl) Register(ctx context.Context, req *http.Request,
 func (service *UserServiceImpl) Login(ctx context.Context, req web.UserLoginRequest) (web.UserRead, error) {
 	// validate request
 	err := service.validate.Struct(req)
-	helper.PanicIfError(err)
+	if err != nil {
+		return web.UserRead{}, errors.New("error when validate request")
+	}
 
 	// establish db connection
 	dbpool := service.db
 
 	// find user by username
 	user, err := service.userRepository.FindByUsername(ctx, dbpool, req.Username)
-	helper.PanicIfError(err)
+	if err != nil {
+		return web.UserRead{}, errors.New("error when find by username")
+	}
 	log.Println("user diambil dari repo: ", user)
 
 	if !user.Status {
-		http.Error(nil, "User is not active", http.StatusBadRequest)
-		panic(err)
+		return web.UserRead{}, errors.New("user is not active")
 	}
 
 	// compare password
 	err = service.userRepository.MatchPassword(ctx, dbpool, user.IdUser, req.Password)
 	if err != nil {
-		http.Error(nil, "Invalid password", http.StatusBadRequest)
-		panic(err)
+		return web.UserRead{}, errors.New("error when match password")
 	}
 
 	// generate token
 	token, err := SignUserToken(user)
-	helper.PanicIfError(err)
+	if err != nil {
+		return web.UserRead{}, errors.New("error when sign user token")
+	}
 
 	// return response
 	return web.UserRead {
@@ -205,22 +217,27 @@ func (service *UserServiceImpl) Login(ctx context.Context, req web.UserLoginRequ
 
 func (service *UserServiceImpl) Activation(ctx context.Context, token string) error {
 	err := service.validate.Struct(ctx)
-	helper.PanicIfError(err)
+	if err != nil {
+		return errors.New("error when validate context")
+	}
 
 	dbpool := service.db
 
 	// validate token
 	user, err := helper.ValidateToken(token)
-	helper.PanicIfError(err)
+	if err != nil {
+		return errors.New("error when validate token")
+	}
 	if user.Status {
-		http.Error(nil, "User already active", http.StatusBadRequest)
-		panic(err)
+		return errors.New("user is already active")
 	}
 	log.Println("user dari activation service", user)
 
 	// update status
 	err = service.userRepository.UpdateStatus(ctx, dbpool, user.IdUser, true)
-	helper.PanicIfError(err)
+	if err != nil {
+		return errors.New("error when update status")
+	}
 
 	log.Println("user berhasil diaktivasi")
 
@@ -229,29 +246,34 @@ func (service *UserServiceImpl) Activation(ctx context.Context, token string) er
 
 func (service *UserServiceImpl) ForgotPassword(ctx context.Context,req web.UserForgotPasswordRequest) (string, error) {
 	err := service.validate.Struct(ctx)
-	helper.PanicIfError(err)
+	if err != nil {
+		return "", errors.New("error when validate context")
+	}
 
 	dbpool := service.db
-	helper.PanicIfError(err)
 
 	// find user by username and email
 	user, err := service.userRepository.FindByUsername(ctx, dbpool, req.Username)
-	helper.PanicIfError(err)
+	if err != nil {
+		return "", errors.New("error when find by username")
+	}
 
 	email, err := service.userRepository.FindByEmail(ctx, dbpool, req.Email)
-	helper.PanicIfError(err)
+	if err != nil {
+		return "", errors.New("error when find by email")
+	}
 
 	if user.IdUser != email.IdUser {
-		http.Error(nil, "Invalid username or email", http.StatusBadRequest)
-		panic(err)
+		return "", errors.New("username and email not match")
 	} 
 
 	err = service.validate.VarWithValue(user.Email, req.Email, "eqfield")
-	helper.PanicIfError(err)
+	if err != nil {
+		return "", errors.New("email not match")
+	}
 
 	if !user.Status {
-		http.Error(nil, "User is not active", http.StatusBadRequest)
-		panic(err)
+		return "", errors.New("user is not active")
 	}
 
 	newPassword := helper.GenerateRandomString(8)
@@ -259,11 +281,15 @@ func (service *UserServiceImpl) ForgotPassword(ctx context.Context,req web.UserF
 
 	// update password
 	res, err := service.userRepository.UpdatePassword(ctx, dbpool, user.IdUser, newPassword)
-	helper.PanicIfError(err)
+	if err != nil {
+		return "", errors.New("error when update password")
+	}
 
 	// generate token
 	token, err := SignUserToken(user)
-	helper.PanicIfError(err)
+	if err != nil {
+		return "", errors.New("error when sign user token")
+	}
 
 	// send email
 	log.Println("token", token)
@@ -273,19 +299,21 @@ func (service *UserServiceImpl) ForgotPassword(ctx context.Context,req web.UserF
 
 func (service *UserServiceImpl) MatchPassword(ctx context.Context,id int64, password string) error {
 	err := service.validate.Struct(ctx)
-	helper.PanicIfError(err)
+	if err != nil {
+		return errors.New("error when validate context")
+	}
 
 	dbpool := service.db
-	helper.PanicIfError(err)
 
 	user, err := service.userRepository.FindById(ctx, dbpool, id)
-	helper.PanicIfError(err)
+	if err != nil {
+		return errors.New("error when find by id")
+	}
 
 	// // compare password
 	err = service.userRepository.MatchPassword(ctx, dbpool, user.IdUser, password)
 	if err != nil {
-		http.Error(nil, "Invalid password", http.StatusBadRequest)
-		panic(err)
+		return errors.New("error when match password")
 	}
 
 	return nil
@@ -293,14 +321,17 @@ func (service *UserServiceImpl) MatchPassword(ctx context.Context,id int64, pass
 
 func (service *UserServiceImpl) UpdatePassword(ctx context.Context,id int64, password string) error{
 	err := service.validate.Struct(ctx)
-	helper.PanicIfError(err)
+	if err != nil {
+		return errors.New("error when validate context")
+	}
 
 	dbpool := service.db
-	helper.PanicIfError(err)
 
 	// update password
 	_, err = service.userRepository.UpdatePassword(ctx, dbpool, id, password)
-	helper.PanicIfError(err)
+	if err != nil {
+		return errors.New("error when update password")
+	}
 
 	log.Println("password berhasil diupdate")
 
@@ -309,14 +340,17 @@ func (service *UserServiceImpl) UpdatePassword(ctx context.Context,id int64, pas
 
 func (service *UserServiceImpl) Delete(ctx context.Context, id int64) error {
 	err := service.validate.Struct(ctx)
-	helper.PanicIfError(err)
+	if err != nil {
+		return errors.New("error when validate context")
+	}
 
 	dbpool := service.db
-	helper.PanicIfError(err)
 
 	// delete user
 	err = service.userRepository.Delete(ctx, dbpool, id)
-	helper.PanicIfError(err)
+	if err != nil {
+		return errors.New("error when delete user")
+	}
 
 	log.Println("user berhasil dihapus")
 
@@ -337,7 +371,7 @@ func SignUserToken(user domain.User) (string, error) {
 
 	tokenString, err := token.SignedString([]byte(config.JWT.SecretKey))
 	if err != nil {
-		return "", err
+		return "", errors.New("error when signed string")
 	}
 
 	return tokenString, nil

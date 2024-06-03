@@ -11,6 +11,12 @@ func PanicIfError(err error) {
 	}
 }
 
+func ReturnIfError(err error) {
+	if err != nil {
+		panic(&httpError{err, http.StatusInternalServerError})
+	}
+}
+
 type httpError struct {
 	error
 	statusCode int

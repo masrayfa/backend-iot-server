@@ -2,6 +2,7 @@ package repository
 
 import (
 	"context"
+	"errors"
 	"log"
 
 	"github.com/jackc/pgx/v5"
@@ -20,7 +21,9 @@ func NewNodeRepository() NodeRepository {
 
 func (n *NodeRepositoryImpl) FindAll(ctx context.Context, pool *pgxpool.Pool, currentUser *domain.UserRead) ([]domain.Node, error) {
 	tx, err := pool.Begin(ctx)
-	helper.PanicIfError(err)
+	if err != nil {
+		return nil, errors.New("error when begin transaction")
+	}
 
 	var nodes []domain.Node
 
@@ -33,11 +36,15 @@ func (n *NodeRepositoryImpl) FindAll(ctx context.Context, pool *pgxpool.Pool, cu
 	if currentUser.IsAdmin {
 		script = `SELECT * FROM node`
 		rows, err = tx.Query(ctx, script)
-		helper.PanicIfError(err)
+		if err != nil {
+			return nil, errors.New("error when query rows")
+		}
 	} else { // if user is not admin, show only nodes that belong to user
 		script = `SELECT * FROM "node" WHERE id_user=$1`
 		rows, err = tx.Query(ctx, script, currentUser.IdUser)
-		helper.PanicIfError(err)
+		if err != nil {
+			return nil, errors.New("error when query rows")
+		}
 	}
 
 
@@ -46,7 +53,7 @@ func (n *NodeRepositoryImpl) FindAll(ctx context.Context, pool *pgxpool.Pool, cu
 		// Scan ini rus sesuai dengan urutan kolom di tabel node di database postgres
 		err := rows.Scan(&node.IdNode, &node.IdUser, &node.IdHardwareNode, &node.Name, &node.Location, &node.IdHardwareSensor, &node.FieldSensor, &node.IsPublic)
 		if err != nil {
-			return nil, err
+			return nil, errors.New("error when scan row")
 		}
 		nodes = append(nodes, node)
 	}
@@ -56,7 +63,9 @@ func (n *NodeRepositoryImpl) FindAll(ctx context.Context, pool *pgxpool.Pool, cu
 
 func (n *NodeRepositoryImpl) FindById(ctx context.Context, pool *pgxpool.Pool, id int64) (domain.Node, error) {
 	tx, err := pool.Begin(ctx)
-	helper.PanicIfError(err)
+	if err != nil {
+		return domain.Node{}, err
+	}
 
 	var node domain.Node
 
@@ -72,7 +81,9 @@ func (n *NodeRepositoryImpl) FindById(ctx context.Context, pool *pgxpool.Pool, i
 
 func (n *NodeRepositoryImpl) GetHardwareNode(ctx context.Context, pool *pgxpool.Pool, hardwareId int64) ([]domain.Node, error) {
 	tx, err := pool.Begin(ctx)
-	helper.PanicIfError(err)
+	if err != nil {
+		return nil, errors.New("error when begin transaction")
+	}
 
 	var nodes []domain.Node
 
@@ -80,7 +91,7 @@ func (n *NodeRepositoryImpl) GetHardwareNode(ctx context.Context, pool *pgxpool.
 
 	rows, err := tx.Query(ctx, script, hardwareId)
 	if err != nil {
-		return nodes, err
+		return nodes, errors.New("error when query rows")
 	}
 	defer rows.Close()
 
@@ -88,14 +99,14 @@ func (n *NodeRepositoryImpl) GetHardwareNode(ctx context.Context, pool *pgxpool.
 		var node domain.Node
 		err := rows.Scan(&node.IdNode, &node.Name, &node.Location, &node.IdUser, &node.IdHardwareNode)
 		if err != nil {
-			return nil, err
+			return nil, errors.New("error when scan row")
 		}
 
 		nodes = append(nodes, node)
 	}
 
 	if err := rows.Err(); err != nil {
-		return nil, err
+		return nil, errors.New("error when scan row")
 	}
 
 	return nodes, nil
@@ -103,7 +114,9 @@ func (n *NodeRepositoryImpl) GetHardwareNode(ctx context.Context, pool *pgxpool.
 
 func (n *NodeRepositoryImpl) Create(ctx context.Context, pool *pgxpool.Pool, nodePayload domain.Node, currentUserId int64) (domain.Node, error) {
 	tx, err := pool.Begin(ctx)
-	helper.PanicIfError(err)
+	if err != nil {
+		return domain.Node{}, errors.New("error when begin transaction")
+	}
 	defer helper.CommitOrRollback(ctx, tx)
 
 	// node object
@@ -123,7 +136,7 @@ func (n *NodeRepositoryImpl) Create(ctx context.Context, pool *pgxpool.Pool, nod
 	// insert node
 	_, err = tx.Exec(ctx, script, node.Name, node.Location, node.IdHardwareNode, node.IdUser, node.IsPublic, node.IdHardwareSensor, node.FieldSensor)
 	if err != nil {
-		return node, err
+		return node, errors.New("error when insert node")
 	}
 	log.Println("node dari repository setelah exec: ", node)
 
@@ -132,17 +145,21 @@ func (n *NodeRepositoryImpl) Create(ctx context.Context, pool *pgxpool.Pool, nod
 
 func (n *NodeRepositoryImpl) Update(ctx context.Context, pool *pgxpool.Pool, node *domain.Node, payload *web.NodeUpdateRequest) (domain.Node, error) {
 	tx, err := pool.Begin(ctx)
-	helper.PanicIfError(err)
+	if err != nil {
+		return domain.Node{}, errors.New("error when begin transaction")
+	}
 	defer helper.CommitOrRollback(ctx, tx)
 
 	script := "UPDATE node SET name = $1, location = $2, id_hardware_node = $3, id_hardware_sensor = $4, field_sensor = $5 WHERE id_node = $6"
 
 	res, err := tx.Exec(ctx, script, payload.Name, payload.Location, payload.IdHardwareNode, payload.IdHardwareSensor, payload.FieldSensor, node.IdNode)
-	helper.PanicIfError(err)
+	if err != nil {
+		return domain.Node{}, errors.New("error when update node")
+	}
 
 	if res.RowsAffected() != 1 {
 		log.Println("No row affected on update node with id: ", node.IdNode)
-		helper.PanicIfError(err)
+		return domain.Node{}, errors.New("error when update node")
 	}
 
 	// or return nil if the return only return error
@@ -151,21 +168,25 @@ func (n *NodeRepositoryImpl) Update(ctx context.Context, pool *pgxpool.Pool, nod
 
 func (n *NodeRepositoryImpl) Delete(ctx context.Context, pool *pgxpool.Pool, id int64) error {
 	tx, err := pool.Begin(ctx)
-	helper.PanicIfError(err)
+	if err != nil {
+		return errors.New("error when begin transaction")
+	}
 	defer helper.CommitOrRollback(ctx, tx)
 
 	script := "DELETE FROM node WHERE id_node = $1"
 
 	_, err = tx.Exec(ctx, script, id)
 	if err != nil {
-		return err
+		return errors.New("error when delete node")
 	}
 	return nil
 }
 
 func (n *NodeRepositoryImpl) FindHardwareNode(ctx context.Context, pool *pgxpool.Pool, userId int64, id int64) ([]domain.NodeByHardware, error) {
 	tx, err := pool.Begin(ctx)
-	helper.PanicIfError(err)
+	if err != nil {
+		return nil, errors.New("error when begin transaction")
+	}
 
 	var nodes []domain.NodeByHardware
 
@@ -173,7 +194,7 @@ func (n *NodeRepositoryImpl) FindHardwareNode(ctx context.Context, pool *pgxpool
 
 	rows, err := tx.Query(ctx, script, userId, id)
 	if err != nil {
-		return nodes, err
+		return nodes, errors.New("error when query rows")
 	}
 	defer helper.CommitOrRollback(ctx, tx)
 
@@ -181,14 +202,14 @@ func (n *NodeRepositoryImpl) FindHardwareNode(ctx context.Context, pool *pgxpool
 		var node domain.NodeByHardware
 		err := rows.Scan(&node.IdNode, &node.Name, &node.Location)
 		if err != nil {
-			return nil, err
+			return nil, errors.New("error when scan row")
 		}
 
 		nodes = append(nodes, node)
 	}
 
 	if err := rows.Err(); err != nil {
-		return nil, err
+		return nil, errors.New("error when scan row")
 	}
 
 	return nodes, nil

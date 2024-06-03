@@ -2,6 +2,7 @@ package repository
 
 import (
 	"context"
+	"errors"
 	"strconv"
 	"time"
 
@@ -19,7 +20,9 @@ func NewChannelRepository() ChannelRepository {
 
 func (r *ChannelRepositoryImpl) Create(ctx context.Context, pool *pgxpool.Pool, channelPayload domain.Channel) (domain.Channel, error) {
 	tx, err := pool.Begin(ctx)
-	helper.PanicIfError(err)
+	if err != nil {
+		return domain.Channel{}, errors.New("error when begin transaction")
+	}
 	defer helper.CommitOrRollback(ctx, tx)
 
 	time := time.Now().UTC()
@@ -32,14 +35,18 @@ func (r *ChannelRepositoryImpl) Create(ctx context.Context, pool *pgxpool.Pool, 
 
 	script := `INSERT INTO feed (time, value, id_node) VALUES ($1, $2, $3)`
 	_, err = tx.Exec(ctx, script, time, channel.Value, channel.IdNode)
-	helper.PanicIfError(err)
+	if err != nil {
+		return domain.Channel{}, errors.New("error when insert channel")
+	}
 
 	return channel, nil
 }
 
 func (r *ChannelRepositoryImpl) GetNodeChannel(ctx context.Context, pool *pgxpool.Pool, nodeId int64, limit int64) ([]domain.Channel, error) {
 	tx, err := pool.Begin(ctx)
-	helper.PanicIfError(err)
+	if err != nil {
+		return nil, errors.New("error when begin transaction")
+	}
 	defer helper.CommitOrRollback(ctx, tx)
 
 
@@ -48,20 +55,24 @@ func (r *ChannelRepositoryImpl) GetNodeChannel(ctx context.Context, pool *pgxpoo
 		script += " LIMIT " + strconv.Itoa(int(limit))
 	}
 	rows, err := tx.Query(ctx, script, nodeId)
-	helper.PanicIfError(err)
+	if err != nil {
+		return nil, errors.New("error when query row")
+	}
 	defer rows.Close()
 
 	var channels []domain.Channel
 	for rows.Next() {
 		var channel domain.Channel
 		err := rows.Scan(&channel.Time, &channel.Value, &channel.IdNode)
-		helper.PanicIfError(err)
+		if err != nil {
+			return nil, errors.New("error when scan row")
+		}
 
 		channels = append(channels, channel)
 	}
 
 	if err := rows.Err(); err != nil {
-		return nil, err
+		return nil, errors.New("error when scan row")
 	}
 
 	return channels, nil
@@ -69,7 +80,9 @@ func (r *ChannelRepositoryImpl) GetNodeChannel(ctx context.Context, pool *pgxpoo
 
 func (r *ChannelRepositoryImpl) GetNodeChannelMultiple(ctx context.Context, pool *pgxpool.Pool, nodes []domain.Node, limit int64) ([]domain.NodeWithFeed, error) {
 	tx, err := pool.Begin(ctx)
-	helper.PanicIfError(err)
+	if err != nil {
+		return nil, errors.New("error when begin transaction")
+	}
 	defer helper.CommitOrRollback(ctx, tx)
 
 	idNodes := make([]int64, len(nodes))
@@ -88,13 +101,17 @@ func (r *ChannelRepositoryImpl) GetNodeChannelMultiple(ctx context.Context, pool
 	script := `SELECT time, value, id_node FROM feed WHERE id_node = ANY($1)` 
 
 	rows, err := tx.Query(ctx, script, idNodes)
-	helper.PanicIfError(err)
+	if err != nil {
+		return nil, errors.New("error when query row")
+	}
 	defer rows.Close()
 
 	for rows.Next() {
 		var channel domain.Channel
 		err := rows.Scan(&channel.Time, &channel.Value, &channel.IdNode)
-		helper.PanicIfError(err)
+		if err != nil {
+			return nil, errors.New("error when scan row")
+		}
 
 		nodeIdIndex := mapIdNodes[int64(channel.IdNode)]
 		if limit >= 0 && len(nodeWithFeed[nodeIdIndex].Feed) < int(limit) {

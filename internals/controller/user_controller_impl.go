@@ -23,7 +23,10 @@ func NewUserController(userService service.UserService) UserController {
 
 func (controller *UserControllerImpl) FindAll(writer http.ResponseWriter, request *http.Request, params httprouter.Params) {
 	user, err := controller.userService.FindAll(request.Context())
-	helper.PanicIfError(err)
+	if err != nil {
+		http.Error(writer, "error when getting data: " + err.Error(), http.StatusBadRequest)
+		return
+	}
 
 	webReponse := web.WebResponse {
 		Code: http.StatusOK,
@@ -37,10 +40,16 @@ func (controller *UserControllerImpl) FindAll(writer http.ResponseWriter, reques
 func (controller *UserControllerImpl) FindById(writer http.ResponseWriter, request *http.Request, params httprouter.Params) {
 	param := params.ByName("user_id")	
 	userId, err := strconv.ParseInt(param, 10, 64)
-	helper.PanicIfError(err)
+	if err != nil {
+		http.Error(writer, "error while parsing", http.StatusBadRequest)
+		return
+	}
 
 	user, err := controller.userService.FindById(request.Context(), userId)
-	helper.PanicIfError(err)
+	if err != nil {
+		http.Error(writer, "error while getting data: " + err.Error(), http.StatusNotFound)
+		return
+	}
 
 	webReponse := web.WebResponse {
 		Code: http.StatusOK,
@@ -57,7 +66,10 @@ func (controller *UserControllerImpl) Register(writer http.ResponseWriter, reque
 	log.Println("userCreateRequest", userCreateRequest)
 
 	userResponse, err := controller.userService.Register(request.Context(), request, userCreateRequest)
-	helper.PanicIfError(err)
+	if err != nil {
+		http.Error(writer, "error while registering user: " + err.Error(), http.StatusBadRequest)
+		return
+	}
 
 	webReponse := web.WebResponse {
 		Code: http.StatusOK,
@@ -75,7 +87,10 @@ func (controller *UserControllerImpl) Login(writer http.ResponseWriter, request 
 	helper.ReadFromRequestBody(request, &loginRequest)
 
 	userResponse, err := controller.userService.Login(request.Context(), loginRequest)
-	helper.PanicIfError(err)
+	if err != nil {
+		http.Error(writer, "error while logging in: " + err.Error(), http.StatusBadRequest)
+		return
+	}
 
 	webReponse := web.WebResponse {
 		Code: http.StatusOK,
@@ -90,7 +105,10 @@ func (controller *UserControllerImpl) Activation(writer http.ResponseWriter, req
 	token := request.URL.Query().Get("token")
 
 	err := controller.userService.Activation(request.Context(), token)
-	helper.PanicIfError(err)
+	if err != nil {
+		http.Error(writer, "error while activating user: " + err.Error(), http.StatusBadRequest)
+		return
+	}
 
 	webReponse := web.WebResponse {
 		Code: http.StatusOK,
@@ -106,7 +124,10 @@ func (controller *UserControllerImpl) ForgotPassword(writer http.ResponseWriter,
 	helper.ReadFromRequestBody(request, &forgotPasswordRequest)
 
 	res, err := controller.userService.ForgotPassword(request.Context(), forgotPasswordRequest)
-	helper.PanicIfError(err)
+	if err != nil {
+		http.Error(writer, err.Error(), http.StatusBadRequest)
+		return
+	}
 
 	webReponse := web.WebResponse {
 		Code:   http.StatusOK,
@@ -125,13 +146,23 @@ func (controller *UserControllerImpl) UpdatePassword(writer http.ResponseWriter,
 
 	param := params.ByName("id")
 	userId, err := strconv.ParseInt(param, 10, 64)
-	helper.PanicIfError(err)
+	if err != nil {
+		http.Error(writer, "error while parsing", http.StatusBadRequest)
+		return
+	}
 
 	err = controller.userService.MatchPassword(request.Context(), userId, updateRequest.OldPassword)
-	helper.PanicIfError(err)
+	if err != nil {
+		http.Error(writer, "error while matching password" + err.Error(), http.StatusBadRequest)
+		return
+
+	}
 
 	err = controller.userService.UpdatePassword(request.Context(), userId, updateRequest.NewPassword)
-	helper.PanicIfError(err)
+	if err != nil {
+		http.Error(writer, "error while updating password " + err.Error(), http.StatusBadRequest)
+		return
+	}
 
 	webReponse := web.WebResponse {
 		Code: http.StatusOK,
@@ -149,11 +180,15 @@ func (controller *UserControllerImpl) UpdateStatus(writer http.ResponseWriter, r
 func (controller *UserControllerImpl) Delete(writer http.ResponseWriter, request *http.Request, params httprouter.Params) {
 	id := params.ByName("id")
 	userId, err := strconv.Atoi(id)
-	helper.PanicIfError(err)
+	if err != nil {
+		http.Error(writer, "error while parsing id", http.StatusBadRequest)
+		return
+	}
 
 	err = controller.userService.Delete(request.Context(), int64(userId))
 	if err != nil {
-		helper.PanicIfError(err)
+		http.Error(writer, "error while deleting user: " + err.Error(), http.StatusBadRequest)
+		return
 	}
 
 	webReponse := web.WebResponse {

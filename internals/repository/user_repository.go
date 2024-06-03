@@ -13,7 +13,6 @@ type UserRepository interface {
 	FindByEmail(ctx context.Context, dbpool *pgxpool.Pool, email string) (domain.User, error)
 	FindByUsername(ctx context.Context, dbpool *pgxpool.Pool, username string) (domain.User, error)
 	Save(ctx context.Context, dbpool *pgxpool.Pool, user domain.User) (domain.User, error)
-	Update(ctx context.Context, dbpool *pgxpool.Pool, user domain.User) (domain.User, error)
 	Delete(ctx context.Context, dbpool *pgxpool.Pool, id int64) error
 	UpdateStatus(ctx context.Context, dbpool *pgxpool.Pool, id int64, status bool) error
 	UpdatePassword(ctx context.Context, dbpool *pgxpool.Pool, id int64, password string) (string, error)

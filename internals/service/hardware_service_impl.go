@@ -2,11 +2,11 @@ package service
 
 import (
 	"context"
+	"errors"
 	"log"
 
 	"github.com/go-playground/validator"
 	"github.com/jackc/pgx/v5/pgxpool"
-	"github.com/masrayfa/internals/helper"
 	"github.com/masrayfa/internals/models/domain"
 	"github.com/masrayfa/internals/models/web"
 	"github.com/masrayfa/internals/repository"
@@ -28,15 +28,21 @@ func NewHardwareService(repository repository.HardwareRepository, db *pgxpool.Po
 
 func (service *HardwareServiceImpl) FindAll(ctx context.Context) ([]web.HardwareReadResponse, error) {
 	err := service.validate.Struct(ctx)
-	helper.PanicIfError(err)
+	if err != nil {
+		return nil, errors.New("error when validate context")
+	}
 
 	dbpool := service.db
 
 	nodes, err := service.repository.FindAllNode(ctx, dbpool)
-	helper.PanicIfError(err)
+	if err != nil {
+		return nil, errors.New("error when find all node")
+	}
 
 	sensors, err := service.repository.FindAllSensor(ctx, dbpool)
-	helper.PanicIfError(err)
+	if err != nil {
+		return nil, errors.New("error when find all sensor")
+	}
 
 	webNodes := make([]web.HardwareReadResponse, len(nodes))
 	for i, node := range nodes {
@@ -66,12 +72,16 @@ func (service *HardwareServiceImpl) FindAll(ctx context.Context) ([]web.Hardware
 
 func (service *HardwareServiceImpl) FindById(ctx context.Context, id int64) (web.HardwareReadResponse, error) {
 	err := service.validate.Struct(ctx)
-	helper.PanicIfError(err)
+	if err != nil {
+		return web.HardwareReadResponse{}, errors.New("error when validate context")
+	}
 
 	dbpool := service.db
 
 	hardware, err := service.repository.FindById(ctx, dbpool, id)
-	helper.PanicIfError(err)
+	if err != nil {
+		return web.HardwareReadResponse{}, errors.New("error when find hardware by id")
+	}
 
 	hardwareResponse := web.HardwareReadResponse {
 		IdHardware: int64(hardware.IdHardware),
@@ -85,12 +95,16 @@ func (service *HardwareServiceImpl) FindById(ctx context.Context, id int64) (web
 
 func (service *HardwareServiceImpl) FindHardwareTypeById(ctx context.Context, id int64) (string, error) {
 	err := service.validate.Struct(ctx)
-	helper.PanicIfError(err)
+	if err != nil {
+		return "", errors.New("error when validate context")
+	}
 
 	dbpool := service.db
 
 	hardwareType, err := service.repository.FindHardwareTypeById(ctx, dbpool, id)
-	helper.PanicIfError(err)
+	if err != nil {
+		return "", errors.New("error when find hardware type by id")
+	}
 
 	return hardwareType, nil
 }
@@ -98,7 +112,9 @@ func (service *HardwareServiceImpl) FindHardwareTypeById(ctx context.Context, id
 func (service *HardwareServiceImpl) Create(ctx context.Context, req web.HardwareCreateRequest) (web.HardwareReadResponse, error) {
 	// validate request
 	err := service.validate.Struct(req)
-	helper.PanicIfError(err)
+	if err != nil {
+		return web.HardwareReadResponse{}, errors.New("error when validate request")
+	}
 
 	// establish db connection
 	dbpool := service.db
@@ -112,7 +128,9 @@ func (service *HardwareServiceImpl) Create(ctx context.Context, req web.Hardware
 
 	// insert to db
 	hardware, err = service.repository.Create(ctx, dbpool, hardware)
-	helper.PanicIfError(err)
+	if err != nil {
+		return web.HardwareReadResponse{}, errors.New("error when create hardware")
+	}
 
 	// convert to web response
 	hardwareResponse := web.HardwareReadResponse {
@@ -128,12 +146,16 @@ func (service *HardwareServiceImpl) Create(ctx context.Context, req web.Hardware
 
 func (service *HardwareServiceImpl) Update(ctx context.Context, req web.HardwareUpdateRequest, id int64) error {
 	err := service.validate.Struct(req)
-	helper.PanicIfError(err)
+	if err != nil {
+		return errors.New("error when validate request")
+	}
 
 	dbpool := service.db
 
 	hardware, err := service.repository.FindById(ctx, dbpool, id)
-	helper.PanicIfError(err)
+	if err != nil {
+		return errors.New("error when find hardware by id")
+	}
 
 	if req.Name != "" {
 		hardware.Name = req.Name
@@ -150,7 +172,9 @@ func (service *HardwareServiceImpl) Update(ctx context.Context, req web.Hardware
 	hardwareDomain := domain.Hardware(hardware)
 
 	err = service.repository.Update(ctx, dbpool, hardwareDomain)
-	helper.PanicIfError(err)
+	if err != nil {
+		return errors.New("error when update hardware")
+	}
 
 	log.Println("Hardware with id: ", hardware.IdHardware, " has been updated")
 
@@ -159,12 +183,16 @@ func (service *HardwareServiceImpl) Update(ctx context.Context, req web.Hardware
 
 func (service *HardwareServiceImpl) Delete(ctx context.Context, id int64) error {
 	err := service.validate.Struct(ctx)
-	helper.PanicIfError(err)
+	if err != nil {
+		return errors.New("error when validate context")
+	}
 
 	dbpool := service.db
 
 	err = service.repository.Delete(ctx, dbpool, id)
-	helper.PanicIfError(err)
+	if err != nil {
+		return errors.New("error when delete hardware")
+	}
 
 	log.Println("Hardware with id: ", id, " has been deleted")
 

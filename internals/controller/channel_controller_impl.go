@@ -27,7 +27,10 @@ func (controller *ChannelControllerImpl) Create(writer http.ResponseWriter, requ
 	log.Println("channelRequest: ", channelRequest)
 
 	_, err := controller.channelService.Create(request.Context(), channelRequest)
-	helper.PanicIfError(err)
+	if err != nil {
+		http.Error(writer, "error when creating data: " + err.Error(), http.StatusBadRequest)
+		return
+	}
 
 	webResponse := web.WebResponse{
 		Code:   http.StatusOK,

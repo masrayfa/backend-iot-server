@@ -9,7 +9,6 @@ import (
 
 	"github.com/go-playground/validator"
 	"github.com/jackc/pgx/v5/pgxpool"
-	"github.com/masrayfa/internals/helper"
 	"github.com/masrayfa/internals/models/domain"
 	"github.com/masrayfa/internals/models/web"
 	"github.com/masrayfa/internals/repository"
@@ -38,7 +37,9 @@ func NewNodeService(repository repository.NodeRepository, hardwareRepository rep
 // need user authentication middleware
 func (service *NodeServiceImpl) FindAll(ctx context.Context, limit int64) ([]domain.NodeWithFeed, error) {
 	err := service.validator.Struct(ctx)
-	helper.PanicIfError(err)
+	if err != nil {
+		return []domain.NodeWithFeed{}, errors.New("error when validate context")
+	}
 
 	dbpool := service.db
 
@@ -49,16 +50,16 @@ func (service *NodeServiceImpl) FindAll(ctx context.Context, limit int64) ([]dom
 
 	log.Println("currentUser: ", currentUser)
 
-	// if currentUser.IsAdmin {
-		
-	// }
-
 	nodes, err := service.repository.FindAll(ctx, dbpool, &currentUser)
-	helper.PanicIfError(err)
+	if err != nil {
+		return []domain.NodeWithFeed{}, err
+	}
 
 	// get all channel
 	nodeChannels, err := service.channelRepository.GetNodeChannelMultiple(ctx, dbpool, nodes, limit)
-	helper.PanicIfError(err)
+	if err != nil {
+		return []domain.NodeWithFeed{}, err
+	}
 
 	log.Println("node channels dari node all service: ", nodeChannels)
 
@@ -68,7 +69,9 @@ func (service *NodeServiceImpl) FindAll(ctx context.Context, limit int64) ([]dom
 // need user authentication middleware
 func (service *NodeServiceImpl) FindById(ctx context.Context, id int64, limit int64) (domain.NodeWithFeed, error) {
 	err := service.validator.Struct(ctx)
-	helper.PanicIfError(err)
+	if err != nil {
+		return domain.NodeWithFeed{}, errors.New("error when validate context")
+	}
 
 	dbpool := service.db
 
@@ -88,14 +91,21 @@ func (service *NodeServiceImpl) FindById(ctx context.Context, id int64, limit in
 	nodeResponse := <- nodeResponseChannel
 	node := nodeResponse.Node
 	err = nodeResponse.Err
-	helper.PanicIfError(err)
+	if err != nil {
+		return domain.NodeWithFeed{}, err
+	}
+
+	// fmt.Println("node id user: ", node.IdUser)
+	// fmt.Println("current id user: ", currentUser.IdUser)
 
 	if node.IdUser != currentUser.IdUser && !currentUser.IsAdmin {
 		return domain.NodeWithFeed{}, errors.New("user is not authorized")
 	}
 
 	feed, err := service.channelRepository.GetNodeChannel(ctx, dbpool, id, limit)
-	helper.PanicIfError(err)
+	if err != nil {
+		return domain.NodeWithFeed{}, errors.New("error when get node channel")
+	}
 
 	nodeWithFeed := domain.NodeWithFeed{
 		Node: node,
@@ -118,7 +128,7 @@ func (service *NodeServiceImpl) FindById(ctx context.Context, id int64, limit in
 func (service *NodeServiceImpl) Create(ctx context.Context, req web.NodeCreateRequest) (nodeCreateRes web.NodeCreateResponse, err error) {
 	err = service.validator.Struct(req)
 	if err != nil {
-		return nodeCreateRes, err
+		return nodeCreateRes, errors.New("error when validate request")
 	}
 
 	log.Println("req: ", req)
@@ -126,6 +136,7 @@ func (service *NodeServiceImpl) Create(ctx context.Context, req web.NodeCreateRe
 	hardwareType, err := service.hardwareRepository.FindHardwareTypeById(ctx, service.db, req.IdHardwareNode)
 	if err != nil {
 		log.Println("err hardwareType: ", err)
+		return nodeCreateRes, errors.New("hardware type is not found") 
 	}
 	hardwareType = strings.ToLower(hardwareType)
 	if hardwareType != "microcontroller unit" && hardwareType != "single-board computer" {
@@ -161,12 +172,6 @@ func (service *NodeServiceImpl) Create(ctx context.Context, req web.NodeCreateRe
 		}
 	}
 
-	// todo: validate get user authentication 
-
-	if err != nil {
-		return nodeCreateRes, err
-	}
-
 	// create node object
 	node := domain.Node{
 		Name: req.Name,
@@ -180,7 +185,9 @@ func (service *NodeServiceImpl) Create(ctx context.Context, req web.NodeCreateRe
 
 	// create node in database
 	node, err = service.repository.Create(ctx, service.db, node, currentUser.IdUser)
-	helper.PanicIfError(err)
+	if err != nil {
+		return nodeCreateRes, err
+	}
 
 	nodeCreateRes = web.NodeCreateResponse{
 		Name: node.Name,
@@ -198,14 +205,18 @@ func (service *NodeServiceImpl) Create(ctx context.Context, req web.NodeCreateRe
 func (service *NodeServiceImpl) Update(ctx context.Context, req web.NodeUpdateRequest, id int64) error {
 	// validate request
 	err := service.validator.Struct(ctx)
-	helper.PanicIfError(err)
+	if err != nil {
+		return errors.New("error when validate request")
+	}
 
 	// establish db connection
 	dbpool := service.db
 
 	// get node
 	node, err := service.repository.FindById(ctx, dbpool, id)
-	helper.PanicIfError(err)
+	if err != nil {
+		return errors.New("node not found")
+	}
 
 	// setup node payload
 	nodePayload := web.NodeUpdateRequest(req)
@@ -223,7 +234,9 @@ func (service *NodeServiceImpl) Update(ctx context.Context, req web.NodeUpdateRe
 
 	// update node
 	_, err = service.repository.Update(ctx, dbpool, &node, &nodePayload)
-	helper.PanicIfError(err)
+	if err != nil {
+		return errors.New("error when update node")
+	}
 
 	return nil
 }
@@ -232,14 +245,18 @@ func (service *NodeServiceImpl) Update(ctx context.Context, req web.NodeUpdateRe
 func (service *NodeServiceImpl) Delete(ctx context.Context,id int64) error {
 	// validate request
 	err := service.validator.Struct(ctx)
-	helper.PanicIfError(err)
+	if err != nil {
+		return errors.New("error when validate request")
+	}
 
 	// establish db connection
 	dbpool := service.db
 
 	// get node
 	node, err := service.repository.FindById(ctx, dbpool, id)
-	helper.PanicIfError(err)
+	if err != nil {
+		return errors.New("node not found")
+	}
 
 	// get user
 	currentUser, ok := ctx.Value("currentUser").(domain.UserRead)
@@ -254,14 +271,18 @@ func (service *NodeServiceImpl) Delete(ctx context.Context,id int64) error {
 
 	// delete node
 	err = service.repository.Delete(ctx, dbpool, id)
-	helper.PanicIfError(err)
+	if err != nil {
+		return errors.New("error when delete node")
+	}
 
 	return nil
 }
 
 func (service *NodeServiceImpl) FindHardwareNode(ctx context.Context, id int64) (web.NodeByHardwareResponse, error) {
 	err := service.validator.Struct(ctx)
-	helper.PanicIfError(err)
+	if err != nil {
+		return web.NodeByHardwareResponse{}, err
+	}
 
 	dbpool := service.db
 
@@ -271,11 +292,15 @@ func (service *NodeServiceImpl) FindHardwareNode(ctx context.Context, id int64) 
 	}
 	
 	hardware, err := service.hardwareRepository.FindById(ctx, dbpool, id)
-	helper.PanicIfError(err)
+	if err != nil {
+		return web.NodeByHardwareResponse{}, errors.New("hardware not found")
+	}
 	
 	// get hardware node
 	nodes, err := service.repository.FindHardwareNode(ctx, dbpool, currentUser.IdUser, id)
-	helper.PanicIfError(err)
+	if err != nil {
+		return web.NodeByHardwareResponse{}, errors.New("node not found")
+	}
 
 	nodeHardware := make([]web.NodeByHardware,0)
 	for _, node := range nodes {

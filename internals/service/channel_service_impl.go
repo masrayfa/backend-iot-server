@@ -6,7 +6,6 @@ import (
 
 	"github.com/go-playground/validator"
 	"github.com/jackc/pgx/v5/pgxpool"
-	"github.com/masrayfa/internals/helper"
 	"github.com/masrayfa/internals/models/domain"
 	"github.com/masrayfa/internals/models/web"
 	"github.com/masrayfa/internals/repository"
@@ -30,11 +29,9 @@ func NewChannelService( repository repository.ChannelRepository, nodeRepository 
 
 func (service *ChannelServiceImpl) Create(ctx context.Context, req web.ChannelCreateRequest) (web.ChannelReadResponse, error) {
 	err := service.validator.Struct(req)
-	helper.PanicIfError(err)
-	// type currentUserResult struct {
-	// 	res domain.UserRead
-	// 	err error
-	// }
+	if err != nil {
+		return web.ChannelReadResponse{}, errors.New("error when validate request")
+	}
 
 	// log.Println("req dari channel service: ", req)
 
@@ -45,13 +42,10 @@ func (service *ChannelServiceImpl) Create(ctx context.Context, req web.ChannelCr
 
 	node, err := service.nodeRepository.FindById(ctx, service.db, req.IdNode)
 	if err != nil {
-		return web.ChannelReadResponse{}, err
+		return web.ChannelReadResponse{}, errors.New("node not found")
 	}
-	// log.Println("node dari channel service: ", node)
 
 	if currentUser.IdUser != node.IdUser {
-		// log.Println("currentUser.IdUser: ", currentUser.IdUser)
-		// log.Println("node.IdUser: ", node.IdUser)
 		return web.ChannelReadResponse{}, errors.New("current user is not the owner of the node")
 	}
 
@@ -63,7 +57,7 @@ func (service *ChannelServiceImpl) Create(ctx context.Context, req web.ChannelCr
 
 	channel, err = service.repository.Create(ctx, service.db, channel)
 	if err != nil {
-		return web.ChannelReadResponse{}, err
+		return web.ChannelReadResponse{}, errors.New("error when create channel")
 	}
 
 	// convert to web response

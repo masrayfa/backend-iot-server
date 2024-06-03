@@ -1,6 +1,7 @@
 package controller
 
 import (
+	"fmt"
 	"log"
 	"net/http"
 	"strconv"
@@ -22,12 +23,18 @@ func NewNodeController(nodeService service.NodeService) NodeController {
 func (controller *NodeControllerImpl) FindAll(writer http.ResponseWriter, request *http.Request, params httprouter.Params) {
 	limitStr := request.URL.Query().Get("limit")
 	limit, err := strconv.ParseInt(limitStr, 10, 64)
-	helper.PanicIfError(err)
+	if err != nil {
+		http.Error(writer, "error when parsing limit", http.StatusBadRequest)
+		return
+	}
 
 	log.Println("limit: ", limit)
 
 	node, err := controller.nodeService.FindAll(request.Context(), limit)
-	helper.PanicIfError(err)
+	if err != nil {
+		http.Error(writer, "error when getting data: " + err.Error(), http.StatusBadRequest)
+		return
+	}
 
 	webResponse := web.WebResponse{
 		Code:   http.StatusOK,
@@ -41,14 +48,24 @@ func (controller *NodeControllerImpl) FindAll(writer http.ResponseWriter, reques
 func (controller *NodeControllerImpl) FindById(writer http.ResponseWriter, request *http.Request, params httprouter.Params) {
 	param := params.ByName("id")
 	id, err := strconv.ParseInt(param, 10, 64)
-	helper.PanicIfError(err)
+	if err != nil {
+		http.Error(writer, "error when parsing id", http.StatusBadRequest)
+		return
+	}
 
 	limitStr := request.URL.Query().Get("limit")
 	limit, err := strconv.ParseInt(limitStr, 10, 64)
-	helper.PanicIfError(err)
+	if err != nil {
+		http.Error(writer, "error when parsing limit", http.StatusBadRequest)
+		return
+	}
 
 	node, err := controller.nodeService.FindById(request.Context(), id, limit)
-	helper.PanicIfError(err)
+	if err != nil {
+		fmt.Println("error di controller: ", err.Error())
+		http.Error(writer, "error when getting data: " + err.Error(), http.StatusBadRequest)
+		return
+	}
 
 	webResponse := web.WebResponse{
 		Code:   http.StatusOK,
@@ -64,7 +81,10 @@ func (controller *NodeControllerImpl) Create(writer http.ResponseWriter, request
 	helper.ReadFromRequestBody(request, &nodeCreateRequest)
 
 	_, err := controller.nodeService.Create(request.Context(), nodeCreateRequest)
-	helper.PanicIfError(err)
+	if err != nil {
+		http.Error(writer, "error when creating data: " + err.Error(), http.StatusBadRequest)
+		return
+	}
 
 	webResponse := web.WebResponse{
 		Code:   http.StatusOK,
@@ -80,10 +100,16 @@ func (controller *NodeControllerImpl) Update(writer http.ResponseWriter, request
 
 	param := params.ByName("id")
 	id, err := strconv.ParseInt(param, 10, 64)
-	helper.PanicIfError(err)
+	if err != nil {
+		http.Error(writer, "error when parsing id", http.StatusBadRequest)
+		return
+	}
 
 	err = controller.nodeService.Update(request.Context(), nodeUpdateRequest, id)
-	helper.PanicIfError(err)
+	if err != nil {
+		http.Error(writer, "error when updating data: " + err.Error(), http.StatusBadRequest)
+		return
+	}
 
 	webResponse := web.WebResponse{
 		Code:   http.StatusOK,
@@ -98,10 +124,16 @@ func (controller *NodeControllerImpl) Update(writer http.ResponseWriter, request
 func (controller *NodeControllerImpl) Delete(writer http.ResponseWriter, request *http.Request, params httprouter.Params) {
 	param := params.ByName("id")
 	id, err := strconv.ParseInt(param, 10, 64)
-	helper.PanicIfError(err)
+	if err != nil {
+		http.Error(writer, "error when parsing id", http.StatusBadRequest)
+		return
+	}
 
 	err = controller.nodeService.Delete(request.Context(), id)
-	helper.PanicIfError(err)
+	if err != nil {
+		http.Error(writer, "error when deleting data: " + err.Error(), http.StatusBadRequest)
+		return
+	}
 
 	webResponse := web.WebResponse{
 		Code:   http.StatusOK,
@@ -117,10 +149,16 @@ func (controller *NodeControllerImpl) Delete(writer http.ResponseWriter, request
 func (controller *NodeControllerImpl) FindHardwareNode(writer http.ResponseWriter, request *http.Request, params httprouter.Params) {
 	param := params.ByName("id")
 	id, err := strconv.ParseInt(param, 10, 64)
-	helper.PanicIfError(err)
+	if err != nil {
+		http.Error(writer, "error parsing id hardware", http.StatusBadRequest)
+		return 
+	}
 
 	hardware, err := controller.nodeService.FindHardwareNode(request.Context(), id)
-	helper.PanicIfError(err)
+	if err != nil {
+		http.Error(writer, "error when getting data " + err.Error(), http.StatusBadRequest)
+		return
+	}
 
 	webResponse := web.WebResponse{
 		Code:   http.StatusOK,

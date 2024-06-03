@@ -23,10 +23,16 @@ func NewHardwareController(service service.HardwareService) HardwareController {
 func (c *HardwareControllerImpl) FindHardwareTypeById(writer http.ResponseWriter, request *http.Request, params httprouter.Params) {
 	param := params.ByName("id")
 	id, err := strconv.ParseInt(param, 10, 64)
-	helper.PanicIfError(err)
+	if err != nil {
+		http.Error(writer, "error when parsing id", http.StatusBadRequest)
+		return
+	}
 
 	hardwareResponse, err := c.service.FindHardwareTypeById(request.Context(), id)
-	helper.PanicIfError(err)
+	if err != nil {
+		http.Error(writer, "error when getting data: " + err.Error(), http.StatusBadRequest)
+		return
+	}
 
 	webResponse := web.WebResponse{
 		Code: http.StatusOK,
@@ -39,7 +45,10 @@ func (c *HardwareControllerImpl) FindHardwareTypeById(writer http.ResponseWriter
 
 func (c *HardwareControllerImpl) FindAll(writer http.ResponseWriter, request *http.Request, params httprouter.Params) {
 	hardwareResponse, err := c.service.FindAll(request.Context())
-	helper.PanicIfError(err)
+	if err != nil {
+		http.Error(writer, "error when getting data: " + err.Error(), http.StatusBadRequest)
+		return
+	}
 
 	webResponse := web.WebResponse{
 		Code: http.StatusOK,
@@ -53,10 +62,16 @@ func (c *HardwareControllerImpl) FindAll(writer http.ResponseWriter, request *ht
 func (c *HardwareControllerImpl) FindById(writer http.ResponseWriter, request *http.Request, params httprouter.Params) {
 	param := params.ByName("id")
 	id, err := strconv.ParseInt(param, 10, 64)
-	helper.PanicIfError(err)
+	if err != nil {
+		http.Error(writer, "error when parsing id", http.StatusBadRequest)
+		return
+	}
 
 	hardwareResponse, err := c.service.FindById(request.Context(), id)
-	helper.PanicIfError(err)
+	if err != nil {
+		http.Error(writer, "error when getting data: " + err.Error(), http.StatusBadRequest)
+		return
+	}
 
 	webResponse := web.WebResponse{
 		Code: http.StatusOK,
@@ -72,7 +87,10 @@ func (c *HardwareControllerImpl) Create(writer http.ResponseWriter, request *htt
 	helper.ReadFromRequestBody(request, &hardwareRequest)
 
 	hardwareResponse, err := c.service.Create(request.Context(), hardwareRequest)
-	helper.PanicIfError(err)
+	if err != nil {
+		http.Error(writer, "error when creating data: " + err.Error(), http.StatusBadRequest)
+		return
+	}
 
 	webResponse := web.WebResponse{
 		Code: http.StatusOK,
@@ -86,13 +104,19 @@ func (c *HardwareControllerImpl) Create(writer http.ResponseWriter, request *htt
 func (c *HardwareControllerImpl) Update(writer http.ResponseWriter, request *http.Request, params httprouter.Params) {
 	param := params.ByName("id")
 	id, err := strconv.ParseInt(param, 10, 64)
-	helper.PanicIfError(err)
+	if err != nil {
+		http.Error(writer, "error when parsing id", http.StatusBadRequest)
+		return
+	}
 
 	hardwareRequest := web.HardwareUpdateRequest{}
 	helper.ReadFromRequestBody(request, &hardwareRequest)
 
 	err = c.service.Update(request.Context(), hardwareRequest, id)
-	helper.PanicIfError(err)
+	if err != nil {
+		http.Error(writer, "error when updating data: " + err.Error(), http.StatusBadRequest)
+		return
+	}
 
 	webResponse := web.WebResponse{
 		Code: http.StatusOK,
@@ -106,10 +130,16 @@ func (c *HardwareControllerImpl) Update(writer http.ResponseWriter, request *htt
 func (c *HardwareControllerImpl) Delete(writer http.ResponseWriter, request *http.Request, params httprouter.Params) {
 	param := params.ByName("id")
 	id, err := strconv.ParseInt(param, 10, 64)
-	helper.PanicIfError(err)
+	if err != nil {
+		http.Error(writer, "error when parsing id", http.StatusBadRequest)
+		return
+	}
 
 	err = c.service.Delete(request.Context(), id)
-	helper.PanicIfError(err)
+	if err != nil {
+		http.Error(writer, "error when deleting data: " + err.Error(), http.StatusBadRequest)
+		return
+	}
 
 	webResponse := web.WebResponse{
 		Code: http.StatusOK,

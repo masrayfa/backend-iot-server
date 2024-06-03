@@ -2,6 +2,7 @@ package repository
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"log"
 	"net/http"
@@ -24,19 +25,25 @@ func NewUserRepository() UserRepository {
 // FindAll returns all users
 func (r *UserRepositoryImpl) FindAll(ctx context.Context, dbpool *pgxpool.Pool) ([]domain.User, error) {
 	tx, err := dbpool.Begin(ctx)
-	helper.PanicIfError(err)
+	if err != nil {
+		return nil, errors.New("error when begin transaction")
+	}
 
 	script := "SELECT id_user, email, username, status, isAdmin from user_person"
 
 	rows, err := tx.Query(ctx, script)
-	helper.PanicIfError(err)
+	if err != nil {
+		return nil, errors.New("error when query rows")
+	}
 	defer rows.Close()
 
 	var users []domain.User
 	for rows.Next() {
 		var user domain.User
 		err = rows.Scan(&user.IdUser, &user.Email, &user.Username, &user.Status, &user.IsAdmin)
-		helper.PanicIfError(err)
+		if err != nil {
+			return nil, errors.New("error when scan row")
+		}
 
 		users = append(users, user)
 	}
@@ -47,13 +54,17 @@ func (r *UserRepositoryImpl) FindAll(ctx context.Context, dbpool *pgxpool.Pool) 
 // FindById returns a user by id
 func (r *UserRepositoryImpl) FindById(ctx context.Context, dbpool *pgxpool.Pool, id int64) (domain.UserRead, error) {
 	tx, err := dbpool.Begin(ctx)
-	helper.PanicIfError(err)
+	if err != nil {
+		return domain.UserRead{}, errors.New("error when begin transaction")
+	}
 
 	script := "SELECT id_user, email, username, status, isAdmin FROM user_person WHERE id_user = $1"
 
 	var user domain.UserRead 
 	err = tx.QueryRow(ctx, script, id).Scan(&user.IdUser, &user.Email, &user.Username, &user.Status, &user.IsAdmin)
-	helper.PanicIfError(err)
+	if err != nil {
+		return domain.UserRead{}, errors.New("error when query row")
+	}
 
 	return user, nil
 }
@@ -63,13 +74,18 @@ func (r *UserRepositoryImpl) FindByEmail(ctx context.Context, dbpool *pgxpool.Po
 	log.Println("Find by email")
 
 	tx, err := dbpool.Begin(ctx)
-	helper.PanicIfError(err)
+	if err != nil {
+		return domain.User{}, errors.New("error when begin transaction")
+	}
 
 	script := "SELECT id_user, email, username, status, isAdmin from user_person WHERE email = $1"
 
 	rows := tx.QueryRow(ctx, script, email)
 
 	err = rows.Scan(&user.IdUser, &user.Email, &user.Username, &user.Status, &user.IsAdmin)
+	if err != nil {
+		return domain.User{}, errors.New("error when scan row")
+	}
 	defer helper.CommitOrRollback(ctx, tx)
 
 	return user, nil
@@ -80,7 +96,9 @@ func (r *UserRepositoryImpl) FindByUsername(ctx context.Context, dbpool *pgxpool
 	log.Println("Find by username", username)
 
 	tx, err := dbpool.Begin(ctx)
-	helper.PanicIfError(err)
+	if err != nil {
+		return domain.User{}, errors.New("error when begin transaction")
+	}
 
 	sqlStatement := `SELECT id_user, email, username,  status, isAdmin FROM user_person WHERE username=$1`
 	err = tx.QueryRow(ctx, sqlStatement, username).Scan(
@@ -90,6 +108,9 @@ func (r *UserRepositoryImpl) FindByUsername(ctx context.Context, dbpool *pgxpool
 		&user.Status,
 		&user.IsAdmin,
 	)
+	if err != nil {
+		return domain.User{}, errors.New("error when scan row")
+	}
 	defer helper.CommitOrRollback(ctx, tx)
 
 	log.Println("user di repository: ", user)
@@ -104,11 +125,13 @@ func (r *UserRepositoryImpl) Save(ctx context.Context, dbpool *pgxpool.Pool, use
 
 	hashedPassword, err := helper.HashPassword(user.Password)
 	if err != nil {
-		return user, err
+		return user, errors.New("error when hash password")
 	}
 
 	tx, err := dbpool.Begin(ctx)
-	helper.PanicIfError(err)
+	if err != nil {
+		return user, errors.New("error when begin transaction")
+	}
 
 	defer func() {
 		err := recover()
@@ -131,7 +154,7 @@ func (r *UserRepositoryImpl) Save(ctx context.Context, dbpool *pgxpool.Pool, use
 	var idUser int64
 	err = row.Scan(&idUser)
 	if err != nil {
-		return user, err
+		return user, errors.New("error when insert user")
 	}
 	log.Println("id user dari save repository: ", idUser)
 
@@ -140,25 +163,24 @@ func (r *UserRepositoryImpl) Save(ctx context.Context, dbpool *pgxpool.Pool, use
 	return user, nil
 }
 
-// Update updates a user
-func (r *UserRepositoryImpl) Update(ctx context.Context, dbpool *pgxpool.Pool, user domain.User) (domain.User, error) {
-	panic("unimplemented")
-}
-
 // Delete deletes a user
 func (r *UserRepositoryImpl) Delete(ctx context.Context, dbpool *pgxpool.Pool, id int64) error {
 	tx, err := dbpool.Begin(ctx)
-	helper.PanicIfError(err)
+	if err != nil {
+		return errors.New("error when begin transaction")
+	}
 	defer helper.CommitOrRollback(ctx, tx)
 
 	script := "DELETE FROM user_person WHERE id_user = $1"
 
 	res, err := tx.Exec(ctx, script, id)
-	helper.PanicIfError(err)
+	if err != nil {
+		return errors.New("error when delete user")
+	}
 
 	if res.RowsAffected() != 1 {
 		http.Error(nil, fmt.Sprintf("No row affected on delete user with id: %d", id), http.StatusBadRequest)
-		return err
+		return errors.New("error when delete user")
 	}
 
 	return nil
@@ -169,14 +191,16 @@ func (r *UserRepositoryImpl) UpdateStatus(ctx context.Context, dbpool *pgxpool.P
 	log.Println("update status repository")
 
 	tx, err := dbpool.Begin(ctx)
-	helper.PanicIfError(err)
+	if err != nil {
+		return errors.New("error when begin transaction")
+	}
 	defer helper.CommitOrRollback(ctx, tx)
 
 	script := "UPDATE user_person SET status = $1 WHERE id_user = $2"
 
 	res, err := tx.Exec(ctx, script, status, id)
 	if err != nil {
-		return err
+		return errors.New("error when update user status")
 	}
 	count := res.RowsAffected()
 	if count == 0 {
@@ -191,20 +215,26 @@ func (r *UserRepositoryImpl) UpdateStatus(ctx context.Context, dbpool *pgxpool.P
 // UpdatePassword updates a user password
 func (r *UserRepositoryImpl) UpdatePassword(ctx context.Context, dbpool *pgxpool.Pool, id int64, password string) (string, error) {
 	tx, err := dbpool.Begin(ctx)
-	helper.PanicIfError(err)
+	if err != nil {
+		return "", errors.New("error when begin transaction")
+	}
 	defer helper.CommitOrRollback(ctx, tx)
 
 	script := "UPDATE user_person SET password = $1 WHERE id_user = $2"
 
 	hashedPassword, err := helper.HashPassword(password)
-	helper.PanicIfError(err)
+	if err != nil {
+		return "", errors.New("error when hash password")
+	}
 
 	res, err := tx.Exec(ctx, script, hashedPassword, id)
-	helper.PanicIfError(err)
+	if err != nil {
+		return "", errors.New("error when update user password")
+	}
 
 	if res.RowsAffected() != 1 {
 		http.Error(nil, fmt.Sprintf("No row affected on update user password with id: %d", id), http.StatusBadRequest)
-		return "", err
+		return "", errors.New("error when update user password")
 	}
 
 	return password, nil
@@ -216,17 +246,23 @@ func (r *UserRepositoryImpl) MatchPassword(ctx context.Context, dbpool *pgxpool.
 	script := "SELECT password FROM user_person WHERE id_user = $1"
 
 	tx, err := dbpool.Begin(ctx)
-	helper.PanicIfError(err)
+	if err != nil {
+		return errors.New("error when begin transaction")
+	}
 
 	err = tx.QueryRow(ctx, script, id).Scan(&userPassword)
-	helper.PanicIfError(err)
+	if err != nil {
+		return errors.New("error when scan row")
+	}
 
 	hashedPassword, err := helper.HashPassword(password)
-	helper.PanicIfError(err)
+	if err != nil {
+		return errors.New("error when hash password")
+	}
 
 	// compare password
 	if userPassword != hashedPassword {
-		return err
+		return errors.New("password not match")
 	}
 
 	return nil
@@ -244,7 +280,10 @@ func (r *UserRepositoryImpl) SendEmailForgotPassword(ctx context.Context, dbpool
 		</html>`, user.Username, password)
 
 	err := helper.SendEmail(user.Email, subject, body)
-	helper.PanicIfError(err)
+	if err != nil {
+		http.Error(nil, "error when send email", http.StatusBadRequest)
+		return errors.New("error when send email")
+	}
 
 	return nil
 }
@@ -253,7 +292,9 @@ func (r *UserRepositoryImpl) SendEmailActivation(ctx context.Context, dbpool *pg
 	config := configs.GetConfig()
 
 	jwtToken, err := helper.SignUserToken(user)
-	helper.PanicIfError(err)
+	if err != nil {
+		return errors.New("error when sign user token")
+	}
 
 	urlCode := fmt.Sprintf("%s/api/v1/user/activate?token=%s", config.Server.Domain, jwtToken)
 	subject := "Activation Account"
@@ -271,7 +312,9 @@ func (r *UserRepositoryImpl) SendEmailActivation(ctx context.Context, dbpool *pg
 		</html>`, user.Username, urlCode)
 
 	err = helper.SendEmail(user.Email, subject, body)
-	helper.PanicIfError(err)
+	if err != nil {
+		return errors.New("error when send email")
+	}
 
 	return nil
 }
