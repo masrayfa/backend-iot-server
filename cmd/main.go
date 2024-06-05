@@ -73,9 +73,9 @@ func main() {
 	mainRouter.appRouter.Handler("POST", "/api/v1/channel/*path", http.StripPrefix("/api/v1/channel", authenticationMiddleware.ValidateUser(channelRouter)))
 
 	options := cors.Options{
-		AllowedOrigins: []string{"*"},
-		AllowedMethods: []string{"GET", "POST", "PUT", "DELETE", "HEAD", "PATCH"},
-		AllowedHeaders: []string{"*"},
+		AllowedOrigins: []string{"http://localhost:5173"},
+		AllowedMethods: []string{"GET", "POST", "PUT", "DELETE"},
+		AllowedHeaders: []string{"Content-Type", "Authorization"},
 		AllowCredentials: true,
 	}
 

@@ -1,7 +1,6 @@
 package controller
 
 import (
-	"fmt"
 	"log"
 	"net/http"
 	"strconv"
@@ -24,7 +23,13 @@ func (controller *NodeControllerImpl) FindAll(writer http.ResponseWriter, reques
 	limitStr := request.URL.Query().Get("limit")
 	limit, err := strconv.ParseInt(limitStr, 10, 64)
 	if err != nil {
-		http.Error(writer, "error when parsing limit", http.StatusBadRequest)
+		webErrResponse := web.WebErrResponse{
+			Code: http.StatusBadRequest,
+			Status: http.StatusText(http.StatusBadRequest),
+			Mesage: err.Error(),
+		}
+
+		helper.WriteToResponseBody(writer, webErrResponse)
 		return
 	}
 
@@ -32,7 +37,13 @@ func (controller *NodeControllerImpl) FindAll(writer http.ResponseWriter, reques
 
 	node, err := controller.nodeService.FindAll(request.Context(), limit)
 	if err != nil {
-		http.Error(writer, "error when getting data: " + err.Error(), http.StatusBadRequest)
+		webErrResponse := web.WebErrResponse{
+			Code: http.StatusBadRequest,
+			Status: http.StatusText(http.StatusBadRequest),
+			Mesage: err.Error(),
+		}
+
+		helper.WriteToResponseBody(writer, webErrResponse)
 		return
 	}
 
@@ -49,21 +60,38 @@ func (controller *NodeControllerImpl) FindById(writer http.ResponseWriter, reque
 	param := params.ByName("id")
 	id, err := strconv.ParseInt(param, 10, 64)
 	if err != nil {
-		http.Error(writer, "error when parsing id", http.StatusBadRequest)
+		webErrResponse := web.WebErrResponse{
+			Code: http.StatusBadRequest,
+			Status: http.StatusText(http.StatusBadRequest),
+			Mesage: err.Error(),
+		}
+
+		helper.WriteToResponseBody(writer, webErrResponse)
 		return
 	}
 
 	limitStr := request.URL.Query().Get("limit")
 	limit, err := strconv.ParseInt(limitStr, 10, 64)
 	if err != nil {
-		http.Error(writer, "error when parsing limit", http.StatusBadRequest)
+		webErrResponse := web.WebErrResponse{
+			Code: http.StatusBadRequest,
+			Status: http.StatusText(http.StatusBadRequest),
+			Mesage: err.Error(),
+		}
+
+		helper.WriteToResponseBody(writer, webErrResponse)
 		return
 	}
 
 	node, err := controller.nodeService.FindById(request.Context(), id, limit)
 	if err != nil {
-		fmt.Println("error di controller: ", err.Error())
-		http.Error(writer, "error when getting data: " + err.Error(), http.StatusBadRequest)
+		webErrResponse := web.WebErrResponse{
+			Code: http.StatusBadRequest,
+			Status: http.StatusText(http.StatusBadRequest),
+			Mesage: err.Error(),
+		}
+
+		helper.WriteToResponseBody(writer, webErrResponse)
 		return
 	}
 
@@ -82,7 +110,13 @@ func (controller *NodeControllerImpl) Create(writer http.ResponseWriter, request
 
 	_, err := controller.nodeService.Create(request.Context(), nodeCreateRequest)
 	if err != nil {
-		http.Error(writer, "error when creating data: " + err.Error(), http.StatusBadRequest)
+		webErrResponse := web.WebErrResponse{
+			Code: http.StatusBadRequest,
+			Status: http.StatusText(http.StatusBadRequest),
+			Mesage: err.Error(),
+		}
+
+		helper.WriteToResponseBody(writer, webErrResponse)
 		return
 	}
 
@@ -101,13 +135,25 @@ func (controller *NodeControllerImpl) Update(writer http.ResponseWriter, request
 	param := params.ByName("id")
 	id, err := strconv.ParseInt(param, 10, 64)
 	if err != nil {
-		http.Error(writer, "error when parsing id", http.StatusBadRequest)
+		webErrResponse := web.WebErrResponse{
+			Code: http.StatusBadRequest,
+			Status: http.StatusText(http.StatusBadRequest),
+			Mesage: err.Error(),
+		}
+
+		helper.WriteToResponseBody(writer, webErrResponse)
 		return
 	}
 
 	err = controller.nodeService.Update(request.Context(), nodeUpdateRequest, id)
 	if err != nil {
-		http.Error(writer, "error when updating data: " + err.Error(), http.StatusBadRequest)
+		webErrResponse := web.WebErrResponse{
+			Code: http.StatusBadRequest,
+			Status: http.StatusText(http.StatusBadRequest),
+			Mesage: err.Error(),
+		}
+
+		helper.WriteToResponseBody(writer, webErrResponse)
 		return
 	}
 
@@ -125,13 +171,25 @@ func (controller *NodeControllerImpl) Delete(writer http.ResponseWriter, request
 	param := params.ByName("id")
 	id, err := strconv.ParseInt(param, 10, 64)
 	if err != nil {
-		http.Error(writer, "error when parsing id", http.StatusBadRequest)
+		webErrResponse := web.WebErrResponse{
+			Code: http.StatusBadRequest,
+			Status: http.StatusText(http.StatusBadRequest),
+			Mesage: err.Error(),
+		}
+
+		helper.WriteToResponseBody(writer, webErrResponse)
 		return
 	}
 
 	err = controller.nodeService.Delete(request.Context(), id)
 	if err != nil {
-		http.Error(writer, "error when deleting data: " + err.Error(), http.StatusBadRequest)
+		webErrResponse := web.WebErrResponse{
+			Code: http.StatusBadRequest,
+			Status: http.StatusText(http.StatusBadRequest),
+			Mesage: err.Error(),
+		}
+
+		helper.WriteToResponseBody(writer, webErrResponse)
 		return
 	}
 
@@ -150,13 +208,25 @@ func (controller *NodeControllerImpl) FindHardwareNode(writer http.ResponseWrite
 	param := params.ByName("id")
 	id, err := strconv.ParseInt(param, 10, 64)
 	if err != nil {
-		http.Error(writer, "error parsing id hardware", http.StatusBadRequest)
-		return 
+		webErrResponse := web.WebErrResponse{
+			Code: http.StatusBadRequest,
+			Status: http.StatusText(http.StatusBadRequest),
+			Mesage: err.Error(),
+		}
+
+		helper.WriteToResponseBody(writer, webErrResponse)
+		return
 	}
 
 	hardware, err := controller.nodeService.FindHardwareNode(request.Context(), id)
 	if err != nil {
-		http.Error(writer, "error when getting data " + err.Error(), http.StatusBadRequest)
+		webErrResponse := web.WebErrResponse{
+			Code: http.StatusBadRequest,
+			Status: http.StatusText(http.StatusBadRequest),
+			Mesage: err.Error(),
+		}
+
+		helper.WriteToResponseBody(writer, webErrResponse)
 		return
 	}
 

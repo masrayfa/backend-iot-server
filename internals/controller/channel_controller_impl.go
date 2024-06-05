@@ -28,7 +28,13 @@ func (controller *ChannelControllerImpl) Create(writer http.ResponseWriter, requ
 
 	_, err := controller.channelService.Create(request.Context(), channelRequest)
 	if err != nil {
-		http.Error(writer, "error when creating data: " + err.Error(), http.StatusBadRequest)
+		webErrResponse := web.WebErrResponse{
+			Code: http.StatusBadRequest,
+			Status: http.StatusText(http.StatusBadRequest),
+			Mesage: err.Error(),
+		}
+
+		helper.WriteToResponseBody(writer, webErrResponse)
 		return
 	}
 

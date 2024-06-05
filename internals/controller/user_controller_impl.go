@@ -24,7 +24,13 @@ func NewUserController(userService service.UserService) UserController {
 func (controller *UserControllerImpl) FindAll(writer http.ResponseWriter, request *http.Request, params httprouter.Params) {
 	user, err := controller.userService.FindAll(request.Context())
 	if err != nil {
-		http.Error(writer, "error when getting data: " + err.Error(), http.StatusBadRequest)
+		webErrResponse := web.WebErrResponse{
+			Code: http.StatusBadRequest,
+			Status: http.StatusText(http.StatusBadRequest),
+			Mesage: err.Error(),
+		}
+
+		helper.WriteToResponseBody(writer, webErrResponse)
 		return
 	}
 
@@ -41,13 +47,25 @@ func (controller *UserControllerImpl) FindById(writer http.ResponseWriter, reque
 	param := params.ByName("user_id")	
 	userId, err := strconv.ParseInt(param, 10, 64)
 	if err != nil {
-		http.Error(writer, "error while parsing", http.StatusBadRequest)
+		webErrResponse := web.WebErrResponse{
+			Code: http.StatusBadRequest,
+			Status: http.StatusText(http.StatusBadRequest),
+			Mesage: err.Error(),
+		}
+
+		helper.WriteToResponseBody(writer, webErrResponse)
 		return
 	}
 
 	user, err := controller.userService.FindById(request.Context(), userId)
 	if err != nil {
-		http.Error(writer, "error while getting data: " + err.Error(), http.StatusNotFound)
+		webErrResponse := web.WebErrResponse{
+			Code: http.StatusBadRequest,
+			Status: http.StatusText(http.StatusBadRequest),
+			Mesage: err.Error(),
+		}
+
+		helper.WriteToResponseBody(writer, webErrResponse)
 		return
 	}
 
@@ -67,7 +85,13 @@ func (controller *UserControllerImpl) Register(writer http.ResponseWriter, reque
 
 	userResponse, err := controller.userService.Register(request.Context(), request, userCreateRequest)
 	if err != nil {
-		http.Error(writer, "error while registering user: " + err.Error(), http.StatusBadRequest)
+		webErrResponse := web.WebErrResponse{
+			Code: http.StatusBadRequest,
+			Status: http.StatusText(http.StatusBadRequest),
+			Mesage: err.Error(),
+		}
+
+		helper.WriteToResponseBody(writer, webErrResponse)
 		return
 	}
 
@@ -88,7 +112,13 @@ func (controller *UserControllerImpl) Login(writer http.ResponseWriter, request 
 
 	userResponse, err := controller.userService.Login(request.Context(), loginRequest)
 	if err != nil {
-		http.Error(writer, "error while logging in: " + err.Error(), http.StatusBadRequest)
+		webErrResponse := web.WebErrResponse{
+			Code: http.StatusBadRequest,
+			Status: http.StatusText(http.StatusBadRequest),
+			Mesage: err.Error(),
+		}
+
+		helper.WriteToResponseBody(writer, webErrResponse)
 		return
 	}
 
@@ -106,7 +136,13 @@ func (controller *UserControllerImpl) Activation(writer http.ResponseWriter, req
 
 	err := controller.userService.Activation(request.Context(), token)
 	if err != nil {
-		http.Error(writer, "error while activating user: " + err.Error(), http.StatusBadRequest)
+		webErrResponse := web.WebErrResponse{
+			Code: http.StatusBadRequest,
+			Status: http.StatusText(http.StatusBadRequest),
+			Mesage: err.Error(),
+		}
+
+		helper.WriteToResponseBody(writer, webErrResponse)
 		return
 	}
 
@@ -125,7 +161,13 @@ func (controller *UserControllerImpl) ForgotPassword(writer http.ResponseWriter,
 
 	res, err := controller.userService.ForgotPassword(request.Context(), forgotPasswordRequest)
 	if err != nil {
-		http.Error(writer, err.Error(), http.StatusBadRequest)
+		webErrResponse := web.WebErrResponse{
+			Code: http.StatusBadRequest,
+			Status: http.StatusText(http.StatusBadRequest),
+			Mesage: err.Error(),
+		}
+
+		helper.WriteToResponseBody(writer, webErrResponse)
 		return
 	}
 
@@ -147,20 +189,37 @@ func (controller *UserControllerImpl) UpdatePassword(writer http.ResponseWriter,
 	param := params.ByName("id")
 	userId, err := strconv.ParseInt(param, 10, 64)
 	if err != nil {
-		http.Error(writer, "error while parsing", http.StatusBadRequest)
+		webErrResponse := web.WebErrResponse{
+			Code: http.StatusBadRequest,
+			Status: http.StatusText(http.StatusBadRequest),
+			Mesage: err.Error(),
+		}
+
+		helper.WriteToResponseBody(writer, webErrResponse)
 		return
 	}
 
 	err = controller.userService.MatchPassword(request.Context(), userId, updateRequest.OldPassword)
 	if err != nil {
-		http.Error(writer, "error while matching password" + err.Error(), http.StatusBadRequest)
-		return
+		webErrResponse := web.WebErrResponse{
+			Code: http.StatusBadRequest,
+			Status: http.StatusText(http.StatusBadRequest),
+			Mesage: err.Error(),
+		}
 
+		helper.WriteToResponseBody(writer, webErrResponse)
+		return
 	}
 
 	err = controller.userService.UpdatePassword(request.Context(), userId, updateRequest.NewPassword)
 	if err != nil {
-		http.Error(writer, "error while updating password " + err.Error(), http.StatusBadRequest)
+		webErrResponse := web.WebErrResponse{
+			Code: http.StatusBadRequest,
+			Status: http.StatusText(http.StatusBadRequest),
+			Mesage: err.Error(),
+		}
+
+		helper.WriteToResponseBody(writer, webErrResponse)
 		return
 	}
 
@@ -181,13 +240,25 @@ func (controller *UserControllerImpl) Delete(writer http.ResponseWriter, request
 	id := params.ByName("id")
 	userId, err := strconv.Atoi(id)
 	if err != nil {
-		http.Error(writer, "error while parsing id", http.StatusBadRequest)
+		webErrResponse := web.WebErrResponse{
+			Code: http.StatusBadRequest,
+			Status: http.StatusText(http.StatusBadRequest),
+			Mesage: err.Error(),
+		}
+
+		helper.WriteToResponseBody(writer, webErrResponse)
 		return
 	}
 
 	err = controller.userService.Delete(request.Context(), int64(userId))
 	if err != nil {
-		http.Error(writer, "error while deleting user: " + err.Error(), http.StatusBadRequest)
+		webErrResponse := web.WebErrResponse{
+			Code: http.StatusBadRequest,
+			Status: http.StatusText(http.StatusBadRequest),
+			Mesage: err.Error(),
+		}
+
+		helper.WriteToResponseBody(writer, webErrResponse)
 		return
 	}
 
