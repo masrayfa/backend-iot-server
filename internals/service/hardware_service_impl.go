@@ -80,7 +80,7 @@ func (service *HardwareServiceImpl) FindById(ctx context.Context, id int64) (web
 
 	hardware, err := service.repository.FindById(ctx, dbpool, id)
 	if err != nil {
-		return web.HardwareReadResponse{}, errors.New("error when find hardware by id")
+		return web.HardwareReadResponse{}, err
 	}
 
 	hardwareResponse := web.HardwareReadResponse {
@@ -103,7 +103,7 @@ func (service *HardwareServiceImpl) FindHardwareTypeById(ctx context.Context, id
 
 	hardwareType, err := service.repository.FindHardwareTypeById(ctx, dbpool, id)
 	if err != nil {
-		return "", errors.New("error when find hardware type by id")
+		return "", err
 	}
 
 	return hardwareType, nil
@@ -129,7 +129,7 @@ func (service *HardwareServiceImpl) Create(ctx context.Context, req web.Hardware
 	// insert to db
 	hardware, err = service.repository.Create(ctx, dbpool, hardware)
 	if err != nil {
-		return web.HardwareReadResponse{}, errors.New("error when create hardware")
+		return web.HardwareReadResponse{}, err
 	}
 
 	// convert to web response
@@ -154,7 +154,7 @@ func (service *HardwareServiceImpl) Update(ctx context.Context, req web.Hardware
 
 	hardware, err := service.repository.FindById(ctx, dbpool, id)
 	if err != nil {
-		return errors.New("error when find hardware by id")
+		return err
 	}
 
 	if req.Name != "" {
@@ -173,7 +173,7 @@ func (service *HardwareServiceImpl) Update(ctx context.Context, req web.Hardware
 
 	err = service.repository.Update(ctx, dbpool, hardwareDomain)
 	if err != nil {
-		return errors.New("error when update hardware")
+		return err
 	}
 
 	log.Println("Hardware with id: ", hardware.IdHardware, " has been updated")
@@ -191,7 +191,7 @@ func (service *HardwareServiceImpl) Delete(ctx context.Context, id int64) error 
 
 	err = service.repository.Delete(ctx, dbpool, id)
 	if err != nil {
-		return errors.New("error when delete hardware")
+		return err
 	}
 
 	log.Println("Hardware with id: ", id, " has been deleted")

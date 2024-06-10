@@ -136,7 +136,7 @@ func (service *NodeServiceImpl) Create(ctx context.Context, req web.NodeCreateRe
 	hardwareType, err := service.hardwareRepository.FindHardwareTypeById(ctx, service.db, req.IdHardwareNode)
 	if err != nil {
 		log.Println("err hardwareType: ", err)
-		return nodeCreateRes, errors.New("hardware type is not found") 
+		return nodeCreateRes, err
 	}
 	hardwareType = strings.ToLower(hardwareType)
 	if hardwareType != "microcontroller unit" && hardwareType != "single-board computer" {
@@ -215,7 +215,7 @@ func (service *NodeServiceImpl) Update(ctx context.Context, req web.NodeUpdateRe
 	// get node
 	node, err := service.repository.FindById(ctx, dbpool, id)
 	if err != nil {
-		return errors.New("node not found")
+		return err
 	}
 
 	// setup node payload
@@ -255,7 +255,7 @@ func (service *NodeServiceImpl) Delete(ctx context.Context,id int64) error {
 	// get node
 	node, err := service.repository.FindById(ctx, dbpool, id)
 	if err != nil {
-		return errors.New("node not found")
+		return err
 	}
 
 	// get user
@@ -272,7 +272,7 @@ func (service *NodeServiceImpl) Delete(ctx context.Context,id int64) error {
 	// delete node
 	err = service.repository.Delete(ctx, dbpool, id)
 	if err != nil {
-		return errors.New("error when delete node")
+		return err
 	}
 
 	return nil
@@ -293,13 +293,13 @@ func (service *NodeServiceImpl) FindHardwareNode(ctx context.Context, id int64) 
 	
 	hardware, err := service.hardwareRepository.FindById(ctx, dbpool, id)
 	if err != nil {
-		return web.NodeByHardwareResponse{}, errors.New("hardware not found")
+		return web.NodeByHardwareResponse{}, err
 	}
 	
 	// get hardware node
 	nodes, err := service.repository.FindHardwareNode(ctx, dbpool, currentUser.IdUser, id)
 	if err != nil {
-		return web.NodeByHardwareResponse{}, errors.New("node not found")
+		return web.NodeByHardwareResponse{}, err
 	}
 
 	nodeHardware := make([]web.NodeByHardware,0)

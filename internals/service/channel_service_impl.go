@@ -42,7 +42,7 @@ func (service *ChannelServiceImpl) Create(ctx context.Context, req web.ChannelCr
 
 	node, err := service.nodeRepository.FindById(ctx, service.db, req.IdNode)
 	if err != nil {
-		return web.ChannelReadResponse{}, errors.New("node not found")
+		return web.ChannelReadResponse{}, err
 	}
 
 	if currentUser.IdUser != node.IdUser {
@@ -57,7 +57,7 @@ func (service *ChannelServiceImpl) Create(ctx context.Context, req web.ChannelCr
 
 	channel, err = service.repository.Create(ctx, service.db, channel)
 	if err != nil {
-		return web.ChannelReadResponse{}, errors.New("error when create channel")
+		return web.ChannelReadResponse{}, err
 	}
 
 	// convert to web response

@@ -43,7 +43,7 @@ func (service *UserServiceImpl) FindAll(ctx context.Context) ([]web.UserRead, er
 
 	users, err := service.userRepository.FindAll(ctx, dbpool)
 	if err != nil {
-		return nil, errors.New("error when find all user")
+		return nil, err
 	}
 
 	var userResponses []web.UserRead
@@ -70,7 +70,7 @@ func (service *UserServiceImpl) FindById(ctx context.Context, id int64) (web.Use
 
 	user, err := service.userRepository.FindById(ctx, dbpool, id)
 	if err != nil {
-		return web.UserRead{}, errors.New("error when find user by id")
+		return web.UserRead{}, err
 	}
 
 	userResponse := web.UserRead {
@@ -107,7 +107,7 @@ func (service *UserServiceImpl) Register(ctx context.Context, req *http.Request,
 		log.Println("username tidak ada")
 	} 
 	if err != nil {
-		return web.UserRead{}, errors.New("error when find by username")
+		return web.UserRead{}, err
 	}
 	log.Println("username pass")
 
@@ -116,14 +116,14 @@ func (service *UserServiceImpl) Register(ctx context.Context, req *http.Request,
 		log.Println("email tidak ada")
 	}
 	if err != nil {
-		return web.UserRead{}, errors.New("error when find by email")
+		return web.UserRead{}, err
 	}
 	log.Println("email pass")
 
 	// save user
 	res, err := service.userRepository.Save(ctx, dbpool, user)
 	if err != nil {
-		return web.UserRead{}, errors.New("error when save user")
+		return web.UserRead{}, err
 	}
 	fmt.Println("res", res)
 
@@ -153,7 +153,7 @@ func (service *UserServiceImpl) Register(ctx context.Context, req *http.Request,
 	if sendEmail {
 		err := service.userRepository.SendEmailActivation(ctx, dbpool, userRead)
 		if err != nil {
-			return web.UserRead{}, errors.New("error when send email")
+			return web.UserRead{}, err
 		}
 	}
 
@@ -184,7 +184,7 @@ func (service *UserServiceImpl) Login(ctx context.Context, req web.UserLoginRequ
 	// find user by username
 	user, err := service.userRepository.FindByUsername(ctx, dbpool, req.Username)
 	if err != nil {
-		return web.UserRead{}, errors.New("error when find by username")
+		return web.UserRead{}, err
 	}
 	log.Println("user diambil dari repo: ", user)
 
@@ -195,7 +195,7 @@ func (service *UserServiceImpl) Login(ctx context.Context, req web.UserLoginRequ
 	// compare password
 	err = service.userRepository.MatchPassword(ctx, dbpool, user.IdUser, req.Password)
 	if err != nil {
-		return web.UserRead{}, errors.New("error when match password")
+		return web.UserRead{}, err
 	}
 
 	// generate token
@@ -236,7 +236,7 @@ func (service *UserServiceImpl) Activation(ctx context.Context, token string) er
 	// update status
 	err = service.userRepository.UpdateStatus(ctx, dbpool, user.IdUser, true)
 	if err != nil {
-		return errors.New("error when update status")
+		return err
 	}
 
 	log.Println("user berhasil diaktivasi")
@@ -255,12 +255,12 @@ func (service *UserServiceImpl) ForgotPassword(ctx context.Context,req web.UserF
 	// find user by username and email
 	user, err := service.userRepository.FindByUsername(ctx, dbpool, req.Username)
 	if err != nil {
-		return "", errors.New("error when find by username")
+		return "", err
 	}
 
 	email, err := service.userRepository.FindByEmail(ctx, dbpool, req.Email)
 	if err != nil {
-		return "", errors.New("error when find by email")
+		return "", err
 	}
 
 	if user.IdUser != email.IdUser {
@@ -282,7 +282,7 @@ func (service *UserServiceImpl) ForgotPassword(ctx context.Context,req web.UserF
 	// update password
 	res, err := service.userRepository.UpdatePassword(ctx, dbpool, user.IdUser, newPassword)
 	if err != nil {
-		return "", errors.New("error when update password")
+		return "", err
 	}
 
 	// generate token
@@ -307,13 +307,13 @@ func (service *UserServiceImpl) MatchPassword(ctx context.Context,id int64, pass
 
 	user, err := service.userRepository.FindById(ctx, dbpool, id)
 	if err != nil {
-		return errors.New("error when find by id")
+		return err
 	}
 
 	// // compare password
 	err = service.userRepository.MatchPassword(ctx, dbpool, user.IdUser, password)
 	if err != nil {
-		return errors.New("error when match password")
+		return err
 	}
 
 	return nil
@@ -330,7 +330,7 @@ func (service *UserServiceImpl) UpdatePassword(ctx context.Context,id int64, pas
 	// update password
 	_, err = service.userRepository.UpdatePassword(ctx, dbpool, id, password)
 	if err != nil {
-		return errors.New("error when update password")
+		return err
 	}
 
 	log.Println("password berhasil diupdate")
@@ -349,7 +349,7 @@ func (service *UserServiceImpl) Delete(ctx context.Context, id int64) error {
 	// delete user
 	err = service.userRepository.Delete(ctx, dbpool, id)
 	if err != nil {
-		return errors.New("error when delete user")
+		return err
 	}
 
 	log.Println("user berhasil dihapus")
