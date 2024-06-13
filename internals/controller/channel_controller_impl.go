@@ -123,7 +123,7 @@ func (controller *ChannelControllerImpl) DownloadCSV(writer http.ResponseWriter,
 	}
 
 	
-	feed, err := controller.channelRepository.GetNodeChannel(request.Context(), controller.db, id, limit, startDate, endDate)
+	feed, err := controller.channelRepository.GetNodeChannelCSV(request.Context(), controller.db, id, limit, startDate, endDate)
 	if err != nil {
 		webErrResponse := web.WebErrResponse{
 			Code: http.StatusBadRequest,
