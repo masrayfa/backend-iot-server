@@ -8,4 +8,5 @@ import (
 
 type ChannelService interface {
 	Create(ctx context.Context, req web.ChannelCreateRequest) (web.ChannelReadResponse, error)
+	GetCSV(ctx context.Context, id int64) (string, error)
 }

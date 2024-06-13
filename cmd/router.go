@@ -82,6 +82,7 @@ func NewChannelRouter(channelController controller.ChannelController) *httproute
 
 	// channels endpoint
 	router.POST("/", channelController.Create) // done
+	router.GET("/download-csv/:id", channelController.DownloadCSV)
 
 	return router
 }

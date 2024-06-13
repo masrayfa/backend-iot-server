@@ -50,7 +50,7 @@ func (r *ChannelRepositoryImpl) GetNodeChannel(ctx context.Context, pool *pgxpoo
 	defer helper.CommitOrRollback(ctx, tx)
 
 
-	script := `SELECT time, value, id_node FROM feed WHERE id_node = $1` 
+	script := `SELECT time, value, id_node FROM feed WHERE id_node = $1 ORDER BY time ASC`
 	if limit >= 0 {
 		script += " LIMIT " + strconv.Itoa(int(limit))
 	}

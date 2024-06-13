@@ -238,3 +238,51 @@ func (controller *NodeControllerImpl) FindHardwareNode(writer http.ResponseWrite
 
 	helper.WriteToResponseBody(writer, webResponse)
 }
+
+func (controller *NodeControllerImpl) FindByIdCSV(writer http.ResponseWriter, request *http.Request, params httprouter.Params) {
+	param := params.ByName("id")
+	id, err := strconv.ParseInt(param, 10, 64)
+	if err != nil {
+		webErrResponse := web.WebErrResponse{
+			Code: http.StatusBadRequest,
+			Status: http.StatusText(http.StatusBadRequest),
+			Mesage: err.Error(),
+		}
+
+		helper.WriteToResponseBody(writer, webErrResponse)
+		return
+	}
+
+	limitStr := request.URL.Query().Get("limit")
+	limit, err := strconv.ParseInt(limitStr, 10, 64)
+	if err != nil {
+		webErrResponse := web.WebErrResponse{
+			Code: http.StatusBadRequest,
+			Status: http.StatusText(http.StatusBadRequest),
+			Mesage: err.Error(),
+		}
+
+		helper.WriteToResponseBody(writer, webErrResponse)
+		return
+	}
+
+	node, err := controller.nodeService.FindById(request.Context(), id, limit)
+	if err != nil {
+		webErrResponse := web.WebErrResponse{
+			Code: http.StatusBadRequest,
+			Status: http.StatusText(http.StatusBadRequest),
+			Mesage: err.Error(),
+		}
+
+		helper.WriteToResponseBody(writer, webErrResponse)
+		return
+	}
+
+	webResponse := web.WebResponse{
+		Code:   http.StatusOK,
+		Status: http.StatusText(http.StatusOK),
+		Data:   node,
+	}
+
+	helper.WriteToResponseBody(writer, webResponse)
+}

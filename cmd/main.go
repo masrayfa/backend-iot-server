@@ -37,7 +37,7 @@ func main() {
 	userController := controller.NewUserController(userService)
 	hardwareController := controller.NewHardwareController(hardwareService)
 	nodeController := controller.NewNodeController(nodeService)
-	channelController := controller.NewChannelController(channelService)
+	channelController := controller.NewChannelController(channelService, channelRepository, dbpool)
 
 	authenticationMiddleware := middleware.NewAuthenticationMiddleware(&validateDependency)
 
@@ -71,6 +71,8 @@ func main() {
 	mainRouter.appRouter.Handler("DELETE", "/api/v1/node/*path", http.StripPrefix("/api/v1/node", authenticationMiddleware.ValidateUser(nodeRouter)))
 	// main endpoint channels
 	mainRouter.appRouter.Handler("POST", "/api/v1/channel/*path", http.StripPrefix("/api/v1/channel", authenticationMiddleware.ValidateUser(channelRouter)))
+	mainRouter.appRouter.Handler("GET", "/api/v1/channel/*path", http.StripPrefix("/api/v1/channel", authenticationMiddleware.ValidateUser(channelRouter)))
+	// mainRouter.appRouter.GET("/download-csv/:id", downloadCSVHandler)
 
 	options := cors.Options{
 		AllowedOrigins: []string{"http://localhost:5173"},
@@ -88,3 +90,4 @@ func main() {
 	helper.PanicIfError(err)
 	fmt.Println("Server running on port 8080")
 }
+

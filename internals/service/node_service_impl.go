@@ -66,7 +66,6 @@ func (service *NodeServiceImpl) FindAll(ctx context.Context, limit int64) ([]dom
 	return nodeChannels, nil
 }
 
-// need user authentication middleware
 func (service *NodeServiceImpl) FindById(ctx context.Context, id int64, limit int64) (domain.NodeWithFeed, error) {
 	err := service.validator.Struct(ctx)
 	if err != nil {
@@ -95,31 +94,19 @@ func (service *NodeServiceImpl) FindById(ctx context.Context, id int64, limit in
 		return domain.NodeWithFeed{}, err
 	}
 
-	// fmt.Println("node id user: ", node.IdUser)
-	// fmt.Println("current id user: ", currentUser.IdUser)
-
 	if node.IdUser != currentUser.IdUser && !currentUser.IsAdmin {
 		return domain.NodeWithFeed{}, errors.New("user is not authorized")
 	}
 
 	feed, err := service.channelRepository.GetNodeChannel(ctx, dbpool, id, limit)
 	if err != nil {
-		return domain.NodeWithFeed{}, errors.New("error when get node channel")
+		return domain.NodeWithFeed{}, err
 	}
 
 	nodeWithFeed := domain.NodeWithFeed{
 		Node: node,
 		Feed: feed,
 	}
-	// hardware, err := service.hardwareRepository.FindById(ctx, dbpool, node.IdHardwareNode)
-	// helper.PanicIfError(err)
-
-	// var fieldSensor []domain.Hardware
-	// for _, idHardwareSensor := range node.IdHardwareSensor {
-	// 	hardware, err := service.hardwareRepository.FindById(ctx, dbpool, idHardwareSensor)
-	// 	helper.PanicIfError(err)
-	// 	fieldSensor = append(fieldSensor, hardware)
-	// }
 
 	return nodeWithFeed, nil
 }

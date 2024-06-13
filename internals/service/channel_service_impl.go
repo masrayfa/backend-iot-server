@@ -3,9 +3,12 @@ package service
 import (
 	"context"
 	"errors"
+	"fmt"
+	"os"
 
 	"github.com/go-playground/validator"
 	"github.com/jackc/pgx/v5/pgxpool"
+	"github.com/masrayfa/internals/helper"
 	"github.com/masrayfa/internals/models/domain"
 	"github.com/masrayfa/internals/models/web"
 	"github.com/masrayfa/internals/repository"
@@ -68,4 +71,29 @@ func (service *ChannelServiceImpl) Create(ctx context.Context, req web.ChannelCr
 
 	// return web response
 	return channelResponse, nil
+}
+
+func (service *ChannelServiceImpl) GetCSV(ctx context.Context, id int64) (string, error) {
+	fmt.Println("csv service called")
+
+	err := service.validator.Struct(ctx)
+	if err != nil {
+		return "", errors.New("error when validate context")
+	}
+
+	dbpool := service.db
+
+	feed, err := service.repository.GetNodeChannel(ctx, dbpool, id, 10)
+	if err != nil {
+		return "", err
+	}
+
+	filePath, err := helper.GenerateCSV(feed)
+	if err != nil {
+		return "", err
+	}
+
+	defer os.Remove(filePath)
+
+	return filePath, nil
 }
