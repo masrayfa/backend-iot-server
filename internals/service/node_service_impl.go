@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"log"
 	"strings"
+	"time"
 
 	"github.com/go-playground/validator"
 	"github.com/jackc/pgx/v5/pgxpool"
@@ -66,7 +67,7 @@ func (service *NodeServiceImpl) FindAll(ctx context.Context, limit int64) ([]dom
 	return nodeChannels, nil
 }
 
-func (service *NodeServiceImpl) FindById(ctx context.Context, id int64, limit int64) (domain.NodeWithFeed, error) {
+func (service *NodeServiceImpl) FindById(ctx context.Context, id int64, limit int64, startDate *time.Time, endDate *time.Time) (domain.NodeWithFeed, error) {
 	err := service.validator.Struct(ctx)
 	if err != nil {
 		return domain.NodeWithFeed{}, errors.New("error when validate context")
@@ -98,7 +99,7 @@ func (service *NodeServiceImpl) FindById(ctx context.Context, id int64, limit in
 		return domain.NodeWithFeed{}, errors.New("user is not authorized")
 	}
 
-	feed, err := service.channelRepository.GetNodeChannel(ctx, dbpool, id, limit)
+	feed, err := service.channelRepository.GetNodeChannel(ctx, dbpool, id, limit, startDate, endDate)
 	if err != nil {
 		return domain.NodeWithFeed{}, err
 	}

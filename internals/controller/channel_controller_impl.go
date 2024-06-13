@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"os"
 	"strconv"
+	"time"
 
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/julienschmidt/httprouter"
@@ -81,8 +82,44 @@ func (controller *ChannelControllerImpl) DownloadCSV(writer http.ResponseWriter,
 		return
 	}
 
+	startDateStr := request.URL.Query().Get("start")
+	var startDate *time.Time 
+	if startDateStr != "" {
+		start, err := time.Parse("2006-01-02 15:04:05", startDateStr)
+		if err != nil {
+			webErrResponse := web.WebErrResponse{
+				Code: http.StatusBadRequest,
+				Status: http.StatusText(http.StatusBadRequest),
+				Mesage: err.Error(),
+			}
+
+			helper.WriteToResponseBody(writer, webErrResponse)
+			return
+		}
+		startDate = &start
+	}
+
+	endDateStr := request.URL.Query().Get("end")
+	var endDate *time.Time
 	
-	feed, err := controller.channelRepository.GetNodeChannel(request.Context(), controller.db, id, limit)
+	if endDateStr != "" {
+		end, err := time.Parse("2006-01-02 15:04:05", endDateStr)
+		if err != nil {
+			webErrResponse := web.WebErrResponse{
+				Code: http.StatusBadRequest,
+				Status: http.StatusText(http.StatusBadRequest),
+				Mesage: err.Error(),
+			}
+
+			helper.WriteToResponseBody(writer, webErrResponse)
+			return
+		}
+
+		endDate = &end
+	}
+
+	
+	feed, err := controller.channelRepository.GetNodeChannel(request.Context(), controller.db, id, limit, startDate, endDate)
 	if err != nil {
 		webErrResponse := web.WebErrResponse{
 			Code: http.StatusBadRequest,

@@ -42,19 +42,36 @@ func (r *ChannelRepositoryImpl) Create(ctx context.Context, pool *pgxpool.Pool, 
 	return channel, nil
 }
 
-func (r *ChannelRepositoryImpl) GetNodeChannel(ctx context.Context, pool *pgxpool.Pool, nodeId int64, limit int64) ([]domain.Channel, error) {
+func (r *ChannelRepositoryImpl) GetNodeChannel(ctx context.Context, pool *pgxpool.Pool, nodeId int64, limit int64, startDate *time.Time, endDate *time.Time) ([]domain.Channel, error) {
 	tx, err := pool.Begin(ctx)
 	if err != nil {
 		return nil, errors.New("error when begin transaction")
 	}
 	defer helper.CommitOrRollback(ctx, tx)
+	var args []interface{}
+	args = append(args, nodeId)
 
 
-	script := `SELECT time, value, id_node FROM feed WHERE id_node = $1 ORDER BY time ASC`
+	script := `SELECT time, value, id_node FROM feed WHERE id_node = $1`
+	if startDate != nil {
+        script += " AND time >= $2"
+        args = append(args, *startDate)
+    }
+	if endDate != nil {
+        if startDate != nil {
+            script += " AND time <= $3"
+            args = append(args, *endDate)
+        } else {
+            script+= " AND time <= $2"
+            args = append(args, *endDate)
+        }
+    }
+
 	if limit >= 0 {
 		script += " LIMIT " + strconv.Itoa(int(limit))
 	}
-	rows, err := tx.Query(ctx, script, nodeId)
+
+	rows, err := tx.Query(ctx, script, args...)
 	if err != nil {
 		return nil, errors.New("error when query row")
 	}
