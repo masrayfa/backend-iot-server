@@ -70,16 +70,20 @@ func (controller *ChannelControllerImpl) DownloadCSV(writer http.ResponseWriter,
 	}
 
 	limitStr := request.URL.Query().Get("limit")
-	limit, err := strconv.ParseInt(limitStr, 10, 64)
-	if err != nil {
-		webErrResponse := web.WebErrResponse{
-			Code: http.StatusBadRequest,
-			Status: http.StatusText(http.StatusBadRequest),
-			Mesage: err.Error(),
-		}
+	limit := int64(100)
+	if limitStr != "" {
 
-		helper.WriteToResponseBody(writer, webErrResponse)
-		return
+		limit, err = strconv.ParseInt(limitStr, 10, 64)
+		if err != nil {
+			webErrResponse := web.WebErrResponse{
+				Code: http.StatusBadRequest,
+				Status: http.StatusText(http.StatusBadRequest),
+				Mesage: err.Error(),
+			}
+
+			helper.WriteToResponseBody(writer, webErrResponse)
+			return
+		}
 	}
 
 	startDateStr := request.URL.Query().Get("start")
