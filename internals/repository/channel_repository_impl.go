@@ -67,7 +67,7 @@ func (r *ChannelRepositoryImpl) GetNodeChannel(ctx context.Context, pool *pgxpoo
         }
     }
 
-	if limit >= 0 {
+	if limit > 0 {
 		script += " LIMIT " + strconv.Itoa(int(limit))
 	}
 

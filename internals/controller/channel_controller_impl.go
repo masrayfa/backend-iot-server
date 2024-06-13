@@ -70,7 +70,7 @@ func (controller *ChannelControllerImpl) DownloadCSV(writer http.ResponseWriter,
 	}
 
 	limitStr := request.URL.Query().Get("limit")
-	limit := int64(100)
+	limit := int64(0)
 	if limitStr != "" {
 
 		limit, err = strconv.ParseInt(limitStr, 10, 64)
