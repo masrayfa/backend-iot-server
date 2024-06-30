@@ -16,6 +16,11 @@ type NodeWithFeed struct {
 	Feed []Channel
 }
 
+type NodeWithFeedRow struct {
+	Node Node
+	Feed []ChannelRow
+}
+
 type FieldSensor struct {
 	IdFieldSensor int64  `json:"id_field_sensor"`
 	Name          string `json:"name"`

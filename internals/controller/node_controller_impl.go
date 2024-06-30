@@ -4,7 +4,6 @@ import (
 	"log"
 	"net/http"
 	"strconv"
-	"time"
 
 	"github.com/julienschmidt/httprouter"
 	"github.com/masrayfa/internals/helper"
@@ -84,82 +83,7 @@ func (controller *NodeControllerImpl) FindById(writer http.ResponseWriter, reque
 		return
 	}
 
-	startDateStr := request.URL.Query().Get("start")
-	var startDate *time.Time 
-	if startDateStr == "" {
-		start, err := time.Parse(time.RFC3339, startDateStr)
-		if err != nil {
-			webErrResponse := web.WebErrResponse{
-				Code: http.StatusBadRequest,
-				Status: http.StatusText(http.StatusBadRequest),
-				Mesage: err.Error(),
-			}
-
-			helper.WriteToResponseBody(writer, webErrResponse)
-			return
-		}
-		startDate = &start
-	}
-
-	endDateStr := request.URL.Query().Get("end")
-	var endDate *time.Time
-	
-	if endDateStr == "" {
-		end, err := time.Parse(time.RFC3339, endDateStr)
-		if err != nil {
-			webErrResponse := web.WebErrResponse{
-				Code: http.StatusBadRequest,
-				Status: http.StatusText(http.StatusBadRequest),
-				Mesage: err.Error(),
-			}
-
-			helper.WriteToResponseBody(writer, webErrResponse)
-			return
-		}
-
-		endDate = &end
-	}
-
-	// startDateStr := request.URL.Query().Get("start")
-	// var startDate int64
-
-	// if startDateStr == "" {
-	// 	startDateStr = "0"
-	// } else {
-	// 	startDate, err = strconv.ParseInt(startDateStr, 10, 64)
-	// 	if err != nil {
-	// 		webErrResponse := web.WebErrResponse{
-	// 			Code: http.StatusBadRequest,
-	// 			Status: http.StatusText(http.StatusBadRequest),
-	// 			Mesage: err.Error(),
-	// 		}
-
-	// 		helper.WriteToResponseBody(writer, webErrResponse)
-	// 		return
-	// 	}
-	// }
-
-	// endDateStr := request.URL.Query().Get("end")
-	// var endDate int64
-	
-	// if endDateStr == "" {
-	// 	endDateStr = "0"
-
-	// } else {
-	// 	endDate, err = strconv.ParseInt(endDateStr, 10, 64)
-	// 	if err != nil {
-	// 		webErrResponse := web.WebErrResponse{
-	// 			Code: http.StatusBadRequest,
-	// 			Status: http.StatusText(http.StatusBadRequest),
-	// 			Mesage: err.Error(),
-	// 		}
-
-	// 		helper.WriteToResponseBody(writer, webErrResponse)
-	// 		return
-	// 	}
-	// }
-
-	node, err := controller.nodeService.FindById(request.Context(), id, limit, startDate, endDate)
+	node, err := controller.nodeService.FindById(request.Context(), id, limit)
 	if err != nil {
 		webErrResponse := web.WebErrResponse{
 			Code: http.StatusBadRequest,

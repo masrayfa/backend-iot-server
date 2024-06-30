@@ -10,13 +10,16 @@ import (
 )
 
 func GenerateCSV(data []domain.Channel) (string, error) {
+	log.Println("#Channel:@csv.GenerateCSV:start")
 	file, err := os.Create("data.csv")
 	if err != nil {
 		return "", err
 	}
+	log.Println("#Channel:@csv.GenerateCSV.createFile:success")
 	defer file.Close()
 
 	writer := csv.NewWriter(file)
+	log.Println("#Channel:@csv.GenerateCSV.writer:succes")
 	defer writer.Flush()
 
 	// Write header
@@ -46,5 +49,6 @@ func GenerateCSV(data []domain.Channel) (string, error) {
 	// 	}
 	// }
 
+	log.Println("#Channel:@csv:GenerateCSV.return:success")
 	return file.Name(), nil
 }

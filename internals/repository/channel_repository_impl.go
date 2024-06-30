@@ -3,6 +3,7 @@ package repository
 import (
 	"context"
 	"errors"
+	"log"
 	"strconv"
 	"time"
 
@@ -42,40 +43,26 @@ func (r *ChannelRepositoryImpl) Create(ctx context.Context, pool *pgxpool.Pool, 
 	return channel, nil
 }
 
-func (r *ChannelRepositoryImpl) GetNodeChannel(ctx context.Context, pool *pgxpool.Pool, nodeId int64, limit int64, startDate *time.Time, endDate *time.Time) ([]domain.Channel, error) {
+func (r *ChannelRepositoryImpl) GetNodeChannel(ctx context.Context, pool *pgxpool.Pool, nodeId int64, limit int64) ([]domain.Channel, error) {
+	log.Println("#Channel:@channel_repository_impl:GetNodeChannel:start")
 	tx, err := pool.Begin(ctx)
 	if err != nil {
 		return nil, errors.New("error when begin transaction")
 	}
 	defer helper.CommitOrRollback(ctx, tx)
-	var args []interface{}
-	args = append(args, nodeId)
 
-
+	log.Println("id node: ", nodeId)
 	script := `SELECT time, value, id_node FROM feed WHERE id_node = $1`
-	if startDate != nil {
-        script += " AND time >= $2"
-        args = append(args, *startDate)
-    }
-	if endDate != nil {
-        if startDate != nil {
-            script += " AND time <= $3"
-            args = append(args, *endDate)
-        } else {
-            script+= " AND time <= $2"
-            args = append(args, *endDate)
-        }
-    }
-
 	if limit >= 0 {
 		script += " LIMIT " + strconv.Itoa(int(limit))
 	}
 
-	rows, err := tx.Query(ctx, script, args...)
+	rows, err := tx.Query(ctx, script, nodeId)
 	if err != nil {
 		return nil, errors.New("error when query row")
 	}
 	defer rows.Close()
+	log.Println("#Channel:@channel_repository_impl:GetNodeChannel:query row success")
 
 	var channels []domain.Channel
 	for rows.Next() {
@@ -87,11 +74,13 @@ func (r *ChannelRepositoryImpl) GetNodeChannel(ctx context.Context, pool *pgxpoo
 
 		channels = append(channels, channel)
 	}
+	log.Println("#Channel:@channel_repository_impl:GetNodeChannel:scan row success")
 
 	if err := rows.Err(); err != nil {
 		return nil, errors.New("error when scan row")
 	}
 
+	log.Println("#Channel:@channel_repository_impl:GetNodeChannel:return success")
 	return channels, nil
 }
 

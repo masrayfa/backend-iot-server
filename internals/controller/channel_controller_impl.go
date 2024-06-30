@@ -56,6 +56,10 @@ func (controller *ChannelControllerImpl) Create(writer http.ResponseWriter, requ
 }
 
 func (controller *ChannelControllerImpl) DownloadCSV(writer http.ResponseWriter, request *http.Request, params httprouter.Params) {
+
+	pwd, _ := os.Getwd()
+	log.Println("pwd: ", pwd)
+
 	param := params.ByName("id")
 	id, err := strconv.ParseInt(param, 10, 64)
 	if err != nil {
