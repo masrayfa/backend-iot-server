@@ -2,9 +2,7 @@ package main
 
 import (
 	"fmt"
-	"log"
 	"net/http"
-	"os"
 
 	"github.com/go-playground/validator"
 	"github.com/masrayfa/internals/controller"
@@ -18,8 +16,6 @@ import (
 )
 
 func main() {
-	port := os.Getenv("PORT")
-
 	dbpool := database.NewDBPool()
 
 	validate := validator.New()
@@ -84,10 +80,9 @@ func main() {
 		AllowedHeaders: []string{"Content-Type", "Authorization"},
 		AllowCredentials: true,
 	}
-	log.Println("Server running on port ", port)
 
 	server := http.Server {
-		Addr: ":" + port,
+		Addr: ":8080", 
 		Handler: cors.New(options).Handler(mainRouter.appRouter),
 	}
 
