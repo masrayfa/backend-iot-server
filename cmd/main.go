@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"net/http"
+	"os"
 
 	"github.com/go-playground/validator"
 	"github.com/masrayfa/internals/controller"
@@ -16,6 +17,8 @@ import (
 )
 
 func main() {
+	port := os.Getenv("PORT")
+
 	dbpool := database.NewDBPool()
 
 	validate := validator.New()
@@ -82,7 +85,7 @@ func main() {
 	}
 
 	server := http.Server {
-		Addr: ":8080",
+		Addr: port,
 		Handler: cors.New(options).Handler(mainRouter.appRouter),
 	}
 
