@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"log"
 	"net/http"
 	"os"
 
@@ -83,9 +84,10 @@ func main() {
 		AllowedHeaders: []string{"Content-Type", "Authorization"},
 		AllowCredentials: true,
 	}
+	log.Println("Server running on port ", port)
 
 	server := http.Server {
-		Addr: port,
+		Addr: ":" + port,
 		Handler: cors.New(options).Handler(mainRouter.appRouter),
 	}
 
