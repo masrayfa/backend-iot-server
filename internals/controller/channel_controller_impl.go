@@ -1,9 +1,9 @@
 package controller
 
 import (
+	"fmt"
 	"log"
 	"net/http"
-	"os"
 	"strconv"
 	"time"
 
@@ -56,10 +56,6 @@ func (controller *ChannelControllerImpl) Create(writer http.ResponseWriter, requ
 }
 
 func (controller *ChannelControllerImpl) DownloadCSV(writer http.ResponseWriter, request *http.Request, params httprouter.Params) {
-
-	pwd, _ := os.Getwd()
-	log.Println("pwd: ", pwd)
-
 	param := params.ByName("id")
 	id, err := strconv.ParseInt(param, 10, 64)
 	if err != nil {
@@ -128,6 +124,22 @@ func (controller *ChannelControllerImpl) DownloadCSV(writer http.ResponseWriter,
 
 	
 	feed, err := controller.channelRepository.GetNodeChannelCSV(request.Context(), controller.db, id, limit, startDate, endDate)
+
+	header := []string{"time"}
+	for i := range feed[0].Value {
+		header = append(header, fmt.Sprintf("value %d", i+1))
+	}
+
+	var records []map[string]interface{}
+	for _, d := range feed {
+		record := make(map[string]interface{})
+		record["time"] = d.Time
+		for i, v := range d.Value {
+			record[fmt.Sprintf("value %d", i+1)] = v
+		}
+		records = append(records, record)
+	}
+
 	if err != nil {
 		webErrResponse := web.WebErrResponse{
 			Code: http.StatusBadRequest,
@@ -139,16 +151,23 @@ func (controller *ChannelControllerImpl) DownloadCSV(writer http.ResponseWriter,
 		return
 	}
 
-	filePath, err := helper.GenerateCSV(feed)
-	if err != nil {
-		http.Error(writer, "Could not generate CSV", http.StatusInternalServerError)
-		return
+	webResponse := web.WebResponse{
+		Code: http.StatusOK,
+		Status: http.StatusText(http.StatusOK),
+		Data: records,
 	}
-	defer os.Remove(filePath)
 
-	writer.Header().Set("Content-Disposition", "attachment; filename=records.csv")
-	writer.Header().Set("Content-Type", "text/csv")
-	http.ServeFile(writer, request, filePath)
+	helper.WriteToResponseBody(writer, webResponse)
+	// filePath, err := helper.GenerateCSV(feed)
+	// if err != nil {
+	// 	http.Error(writer, "Could not generate CSV", http.StatusInternalServerError)
+	// 	return
+	// }
+	// defer os.Remove(filePath)
+
+	// writer.Header().Set("Content-Disposition", "attachment; filename=records.csv")
+	// writer.Header().Set("Content-Type", "text/csv")
+	// http.ServeFile(writer, request, filePath)
 }
 
 // type Record struct {

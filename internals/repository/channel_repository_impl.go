@@ -137,6 +137,7 @@ func (r *ChannelRepositoryImpl) GetNodeChannelCSV(ctx context.Context, pool *pgx
 	var args []interface{}
 	args = append(args, nodeId)
 
+	log.Println("#Channel:@channel_repository_impl:GetNodeChannelCSV:start")
 
 	script := `SELECT time, value, id_node FROM feed WHERE id_node = $1`
 	if startDate != nil {
@@ -157,6 +158,7 @@ func (r *ChannelRepositoryImpl) GetNodeChannelCSV(ctx context.Context, pool *pgx
 		script += " LIMIT " + strconv.Itoa(int(limit))
 	}
 
+	log.Println("#Channel:@channel_repository_impl:GetNodeChannelCSV:query:start ", script, args)
 	rows, err := tx.Query(ctx, script, args...)
 	if err != nil {
 		return nil, errors.New("error when query row")
@@ -177,6 +179,8 @@ func (r *ChannelRepositoryImpl) GetNodeChannelCSV(ctx context.Context, pool *pgx
 	if err := rows.Err(); err != nil {
 		return nil, errors.New("error when scan row")
 	}
+
+	log.Println("#Channel:@channel_repository_impl:GetNodeChannelCSV:return success")
 
 	return channels, nil
 }
