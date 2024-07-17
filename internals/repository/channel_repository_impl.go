@@ -47,15 +47,19 @@ func (r *ChannelRepositoryImpl) GetNodeChannel(ctx context.Context, pool *pgxpoo
 	if limit >= 0 {
 		script += " LIMIT " + strconv.Itoa(int(limit))
 	}
-	rows, err := tx.Query(ctx, script, limit)
-	helper.PanicIfError(err)
+	rows, err := tx.Query(ctx, script, nodeId)
+	if err != nil {
+		return nil, err
+	}
 	defer rows.Close()
 
 	var channels []domain.Channel
 	for rows.Next() {
 		var channel domain.Channel
 		err := rows.Scan(&channel.Time, &channel.Value, &channel.IdNode)
-		helper.PanicIfError(err)
+		if err != nil {
+			return nil, err
+		}
 
 		channels = append(channels, channel)
 	}

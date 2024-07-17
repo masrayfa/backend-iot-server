@@ -35,9 +35,19 @@ func (controller *UserControllerImpl) FindAll(writer http.ResponseWriter, reques
 }
 
 func (controller *UserControllerImpl) FindById(writer http.ResponseWriter, request *http.Request, params httprouter.Params) {
-	param := params.ByName("user_id")	
+	param := params.ByName("id")	
 	userId, err := strconv.ParseInt(param, 10, 64)
-	helper.PanicIfError(err)
+	log.Println("userId dari params", userId)
+	if err != nil {
+		webErrResponse := web.WebErrResponse{
+			Code: http.StatusBadRequest,
+			Status: http.StatusText(http.StatusBadRequest),
+			Message: err.Error(),
+		}
+
+		helper.WriteToResponseBody(writer, webErrResponse)
+		return
+	}
 
 	user, err := controller.userService.FindById(request.Context(), userId)
 	helper.PanicIfError(err)
@@ -57,7 +67,15 @@ func (controller *UserControllerImpl) Register(writer http.ResponseWriter, reque
 	log.Println("userCreateRequest", userCreateRequest)
 
 	userResponse, err := controller.userService.Register(request.Context(), request, userCreateRequest)
-	helper.PanicIfError(err)
+	if err != nil {
+		webResponse := web.WebResponse {
+			Code: http.StatusInternalServerError,
+			Status: http.StatusText(http.StatusInternalServerError),
+			Data: err,
+		}
+		helper.WriteToResponseBody(writer, webResponse)
+		return
+	}
 
 	webReponse := web.WebResponse {
 		Code: http.StatusOK,
@@ -75,7 +93,16 @@ func (controller *UserControllerImpl) Login(writer http.ResponseWriter, request 
 	helper.ReadFromRequestBody(request, &loginRequest)
 
 	userResponse, err := controller.userService.Login(request.Context(), loginRequest)
-	helper.PanicIfError(err)
+	if err != nil {
+		webErrResponse := web.WebErrResponse{
+			Code: http.StatusBadRequest,
+			Status: http.StatusText(http.StatusBadRequest),
+			Message: err.Error(),
+		}
+
+		helper.WriteToResponseBody(writer, webErrResponse)
+		return
+	}
 
 	webReponse := web.WebResponse {
 		Code: http.StatusOK,
@@ -90,7 +117,16 @@ func (controller *UserControllerImpl) Activation(writer http.ResponseWriter, req
 	token := request.URL.Query().Get("token")
 
 	err := controller.userService.Activation(request.Context(), token)
-	helper.PanicIfError(err)
+	if err != nil {
+		webErrResponse := web.WebErrResponse{
+			Code: http.StatusBadRequest,
+			Status: http.StatusText(http.StatusBadRequest),
+			Message: err.Error(),
+		}
+
+		helper.WriteToResponseBody(writer, webErrResponse)
+		return
+	}
 
 	webReponse := web.WebResponse {
 		Code: http.StatusOK,
@@ -125,11 +161,30 @@ func (controller *UserControllerImpl) UpdatePassword(writer http.ResponseWriter,
 	userId, err := strconv.ParseInt(param, 10, 64)
 	helper.PanicIfError(err)
 
+
 	err = controller.userService.MatchPassword(request.Context(), userId, updateRequest.OldPassword)
-	helper.PanicIfError(err)
+	if err != nil {
+		webErrResponse := web.WebErrResponse{
+			Code: http.StatusBadRequest,
+			Status: http.StatusText(http.StatusBadRequest),
+			Message: err.Error(),
+		}
+
+		helper.WriteToResponseBody(writer, webErrResponse)
+		return
+	}
 
 	err = controller.userService.UpdatePassword(request.Context(), userId, updateRequest.NewPassword)
-	helper.PanicIfError(err)
+	if err != nil {
+		webErrResponse := web.WebErrResponse{
+			Code: http.StatusBadRequest,
+			Status: http.StatusText(http.StatusBadRequest),
+			Message: err.Error(),
+		}
+
+		helper.WriteToResponseBody(writer, webErrResponse)
+		return
+	}
 
 	webReponse := web.WebResponse {
 		Code: http.StatusOK,

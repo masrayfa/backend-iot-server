@@ -131,30 +131,38 @@ func (n *NodeRepositoryImpl) Create(ctx context.Context, pool *pgxpool.Pool, nod
 }
 
 func (n *NodeRepositoryImpl) Update(ctx context.Context, pool *pgxpool.Pool, node *domain.Node, payload *web.NodeUpdateRequest) (domain.Node, error) {
+	log.Println("@NodeRepositoryImpl::Update:start")
 	tx, err := pool.Begin(ctx)
-	helper.PanicIfError(err)
+	if err != nil {
+		return *node, err
+	}
 	defer helper.CommitOrRollback(ctx, tx)
 
-	script := "UPDATE node SET name = $1, location = $2, id_hardware_node = $3, id_hardware_sensor = $4, field_sensor = $5 WHERE id = $6"
+	script := "UPDATE node SET name = $1, location = $2, id_hardware_node = $3, id_hardware_sensor = $4, field_sensor = $5 WHERE id_node = $6"
 
 	res, err := tx.Exec(ctx, script, payload.Name, payload.Location, payload.IdHardwareNode, payload.IdHardwareSensor, payload.FieldSensor, node.IdNode)
-	helper.PanicIfError(err)
+	if err != nil {
+		return *node, err
+	}
 
 	if res.RowsAffected() != 1 {
 		log.Println("No row affected on update node with id: ", node.IdNode)
-		helper.PanicIfError(err)
+		return *node, err
 	}
 
 	// or return nil if the return only return error
+	log.Println("@NodeRepositoryImpl::Update:succeed")
 	return *node, nil
 }
 
 func (n *NodeRepositoryImpl) Delete(ctx context.Context, pool *pgxpool.Pool, id int64) error {
 	tx, err := pool.Begin(ctx)
-	helper.PanicIfError(err)
+	if err != nil {
+		return err
+	}
 	defer helper.CommitOrRollback(ctx, tx)
 
-	script := "DELETE FROM nodes WHERE id = $1"
+	script := "DELETE FROM node WHERE id_node = $1"
 
 	_, err = tx.Exec(ctx, script, id)
 	if err != nil {

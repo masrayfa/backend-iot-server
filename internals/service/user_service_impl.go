@@ -2,6 +2,7 @@ package service
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"log"
 	"net/http"
@@ -76,110 +77,206 @@ func (service *UserServiceImpl) FindById(ctx context.Context, id int64) (web.Use
 }
 
 func (service *UserServiceImpl) Register(ctx context.Context, req *http.Request, payload web.UserCreateRequest) (web.UserRead, error) {
-	// validate request
-	err := service.validate.Struct(req)
-	helper.PanicIfError(err)
+    // validate request
+    err := service.validate.Struct(payload)
+    if err != nil {
+        return web.UserRead{}, err
+    }
 
-	// establish db connection
-	dbpool := service.db
+    // establish db connection
+    dbpool := service.db
 
-	// create user object
-	user := domain.User {
-		Username: payload.Username,
-		Email: payload.Email,
-		Password: payload.Password,
-	}
-	log.Println("user service", user)
+    // create user object
+    user := domain.User{
+        Username: payload.Username,
+        Email: payload.Email,
+        Password: payload.Password,
+    }
+    log.Println("user service", user)
 
-	_, err = service.userRepository.FindByUsername(ctx, dbpool, user.Username)
-	if helper.IsErrorNotFound(err) {
-		log.Println("username tidak ada")
-	} 
-	if err != nil {
-		http.Error(nil, "Username already exists", http.StatusBadRequest)
-		panic(err)
-	}
-	log.Println("username pass")
+    _, err = service.userRepository.FindByUsername(ctx, dbpool, user.Username)
+    if err == nil {
+        return web.UserRead{}, fmt.Errorf("username already exists")
+    }
 
-	_, err = service.userRepository.FindByEmail(ctx, dbpool, user.Email)
-	if helper.IsErrorNotFound(err) {
-		log.Println("email tidak ada")
-	}
-	if err != nil {
-		http.Error(nil, "Email already exists", http.StatusBadRequest)
-		panic(err)
-	}
-	log.Println("email pass")
+	// Memastikan emg ga ada user sebelumnya
+    if helper.IsErrorNotFound(err) {
+        return web.UserRead{}, err
+    }
+    log.Println("username pass")
 
-	// save user
-	res, err := service.userRepository.Save(ctx, dbpool, user)
-	helper.PanicIfError(err)
-	fmt.Println("res", res)
+    _, err = service.userRepository.FindByEmail(ctx, dbpool, user.Email)
+    if err == nil {
+        return web.UserRead{}, fmt.Errorf("email already exists")
+    }
+    if helper.IsErrorNotFound(err) {
+        return web.UserRead{}, err
+    }
+    log.Println("email pass")
 
-	// convert user to user response
-	userResponse := web.UserRead {
-		IdUser: res.IdUser,
-		Username: res.Username,
-		Email: res.Email,
-		Status: res.Status,
-		IsAdmin: res.IsAdmin,
-	}
+    // save user
+    res, err := service.userRepository.Save(ctx, dbpool, user)
+    if err != nil {
+        return web.UserRead{}, err
+    }
+    fmt.Println("res", res)
 
-	sendEmail, err := strconv.ParseBool(req.URL.Query().Get("send_email"))
-	if err != nil {
-		http.Error(nil, "Invalid send_email", http.StatusBadRequest)
-		panic(err)
-	}
+    // convert user to user response
+    userRead := domain.UserRead{
+        IdUser:   res.IdUser,
+        Username: res.Username,
+        Email:    res.Email,
+        Status:   res.Status,
+        IsAdmin:  res.IsAdmin,
+    }
 
-	var userRead domain.UserRead
-	userRead.IdUser = userResponse.IdUser
-	userRead.Username = userResponse.Username
-	userRead.Email = userResponse.Email
-	userRead.Status = userResponse.Status
-	userRead.IsAdmin = userResponse.IsAdmin
-	log.Println("userRead dari register service", userRead)
+    sendEmail, err := strconv.ParseBool(req.URL.Query().Get("send_email"))
+    if err != nil {
+        return web.UserRead{}, fmt.Errorf("invalid send_email")
+    }
 
-	// send email
-	if sendEmail {
-		err := service.userRepository.SendEmailActivation(ctx, dbpool, userRead)
-		if err != nil {
-			http.Error(nil, "Failed to send activation email", http.StatusBadRequest)
-			panic(err)
-		}
-	}
+    // send email
+    if sendEmail {
+        err := service.userRepository.SendEmailActivation(ctx, dbpool, userRead)
+        if err != nil {
+            return web.UserRead{}, fmt.Errorf("failed to send activation email")
+        }
+    }
 
-	response := fmt.Sprintf("Success sign in, id: %d. Check email for activation", user.IdUser)
+    response := fmt.Sprintf("Success sign in, id: %d. Check email for activation", res.IdUser)
     config := configs.GetConfig()
     if config.Server.Env == "test" {
         jwt, err := helper.SignUserToken(userRead)
         if err != nil {
-            http.Error(nil, "Failed to generate JWT token", http.StatusInternalServerError)
-			panic(err)
+            return web.UserRead{}, fmt.Errorf("failed to generate JWT token")
         }
-        response += fmt.Sprintf(". Token: %s|", jwt)
+        response += fmt.Sprintf(". Token: %s", jwt)
     }
 
-	// return response
-	return userResponse, nil
+
+	userResponse := web.UserRead {
+		IdUser: userRead.IdUser,
+		Username: userRead.Username,
+		Email: userRead.Email,
+		Status: userRead.Status,
+		IsAdmin: userRead.IsAdmin,
+	}
+
+
+    // return response
+    return userResponse, nil
 }
+
+// func (service *UserServiceImpl) Register(ctx context.Context, req *http.Request, payload web.UserCreateRequest) (web.UserRead, error) {
+
+// 	// validate request
+// 	err := service.validate.Struct(req)
+// 	helper.PanicIfError(err)
+
+// 	// establish db connection
+// 	dbpool := service.db
+
+// 	// create user object
+// 	user := domain.User {
+// 		Username: payload.Username,
+// 		Email: payload.Email,
+// 		Password: payload.Password,
+// 	}
+// 	log.Println("user service", user)
+
+// 	_, err = service.userRepository.FindByUsername(ctx, dbpool, user.Username)
+// 	if helper.IsErrorNotFound(err) {
+// 		log.Println("username tidak ada")
+// 	} 
+// 	if err != nil {
+// 		http.Error(nil, "Username already exists", http.StatusBadRequest)
+// 		panic(err)
+// 	}
+// 	log.Println("username pass")
+
+// 	_, err = service.userRepository.FindByEmail(ctx, dbpool, user.Email)
+// 	if helper.IsErrorNotFound(err) {
+// 		log.Println("email tidak ada")
+// 	}
+// 	if err != nil {
+// 		http.Error(nil, "Email already exists", http.StatusBadRequest)
+// 		panic(err)
+// 	}
+// 	log.Println("email pass")
+
+// 	// save user
+// 	res, err := service.userRepository.Save(ctx, dbpool, user)
+// 	helper.PanicIfError(err)
+// 	fmt.Println("res", res)
+
+// 	// convert user to user response
+// 	userResponse := web.UserRead {
+// 		IdUser: res.IdUser,
+// 		Username: res.Username,
+// 		Email: res.Email,
+// 		Status: res.Status,
+// 		IsAdmin: res.IsAdmin,
+// 	}
+
+// 	sendEmail, err := strconv.ParseBool(req.URL.Query().Get("send_email"))
+// 	if err != nil {
+// 		http.Error(nil, "Invalid send_email", http.StatusBadRequest)
+// 		panic(err)
+// 	}
+
+// 	var userRead domain.UserRead
+// 	userRead.IdUser = userResponse.IdUser
+// 	userRead.Username = userResponse.Username
+// 	userRead.Email = userResponse.Email
+// 	userRead.Status = userResponse.Status
+// 	userRead.IsAdmin = userResponse.IsAdmin
+// 	log.Println("userRead dari register service", userRead)
+
+// 	// send email
+// 	if sendEmail {
+// 		err := service.userRepository.SendEmailActivation(ctx, dbpool, userRead)
+// 		if err != nil {
+// 			http.Error(nil, "Failed to send activation email", http.StatusBadRequest)
+// 			panic(err)
+// 		}
+// 	}
+
+// 	response := fmt.Sprintf("Success sign in, id: %d. Check email for activation", user.IdUser)
+//     config := configs.GetConfig()
+//     if config.Server.Env == "test" {
+//         jwt, err := helper.SignUserToken(userRead)
+//         if err != nil {
+//             http.Error(nil, "Failed to generate JWT token", http.StatusInternalServerError)
+// 			panic(err)
+//         }
+//         response += fmt.Sprintf(". Token: %s|", jwt)
+//     }
+
+// 	// return response
+// 	return userResponse, nil
+// }
 
 func (service *UserServiceImpl) Login(ctx context.Context, req web.UserLoginRequest) (web.UserRead, error) {
 	// validate request
 	err := service.validate.Struct(req)
-	helper.PanicIfError(err)
+	if err != nil {
+		return web.UserRead{}, errors.New("invalid request")
+	}
 
 	// establish db connection
 	dbpool := service.db
 
 	// find user by username
 	user, err := service.userRepository.FindByUsername(ctx, dbpool, req.Username)
-	helper.PanicIfError(err)
+	if err != nil {
+		return web.UserRead{}, errors.New("invalid username")
+	}
 	log.Println("user diambil dari repo: ", user)
 
 	if !user.Status {
-		http.Error(nil, "User is not active", http.StatusBadRequest)
-		panic(err)
+		return web.UserRead{}, errors.New("user is not active")
 	}
+
 
 	// compare password
 	err = service.userRepository.MatchPassword(ctx, dbpool, user.IdUser, req.Password)
@@ -204,23 +301,33 @@ func (service *UserServiceImpl) Login(ctx context.Context, req web.UserLoginRequ
 }
 
 func (service *UserServiceImpl) Activation(ctx context.Context, token string) error {
+	log.Println("@UserService::Activation:token", token)
 	err := service.validate.Struct(ctx)
-	helper.PanicIfError(err)
+	if err != nil {
+		return errors.New("invalid request")
+	}
 
 	dbpool := service.db
 
 	// validate token
 	user, err := helper.ValidateToken(token)
-	helper.PanicIfError(err)
+	if err != nil {
+		log.Println("token invalid")
+		return err
+	}
 	if user.Status {
-		http.Error(nil, "User already active", http.StatusBadRequest)
-		panic(err)
+		log.Println("user sudah diaktivasi")
+		return err
 	}
 	log.Println("user dari activation service", user)
 
 	// update status
+	log.Println("user.IdUser", user.IdUser)
 	err = service.userRepository.UpdateStatus(ctx, dbpool, user.IdUser, true)
-	helper.PanicIfError(err)
+	if err != nil {
+		log.Println("gagal mengaktivasi user")
+		return err
+	}
 
 	log.Println("user berhasil diaktivasi")
 
@@ -271,36 +378,51 @@ func (service *UserServiceImpl) ForgotPassword(ctx context.Context,req web.UserF
 	return nil
 }
 
-func (service *UserServiceImpl) MatchPassword(ctx context.Context,id int64, password string) error {
+func (service *UserServiceImpl) MatchPassword(ctx context.Context, id int64, password string) error {
 	err := service.validate.Struct(ctx)
-	helper.PanicIfError(err)
-
-	dbpool := service.db
-	helper.PanicIfError(err)
-
-	user, err := service.userRepository.FindById(ctx, dbpool, id)
-	helper.PanicIfError(err)
-
-	// // compare password
-	err = service.userRepository.MatchPassword(ctx, dbpool, user.IdUser, password)
 	if err != nil {
-		http.Error(nil, "Invalid password", http.StatusBadRequest)
-		panic(err)
+		return errors.New("invalid request")
 	}
 
+	dbpool := service.db
+
+	user, err := service.userRepository.FindById(ctx, dbpool, id)
+	if err != nil {
+		return err
+	}
+
+	// compare password
+	err = service.userRepository.MatchPassword(ctx, dbpool, user.IdUser, password)
+	log.Println("err: ", err)
+	if err != nil {
+		log.Println("@UserService::MatchPassword:password-invalid")
+		return err
+	}
+
+	log.Println("@UserService::MatchPassword:password-valid")
 	return nil
 }
 
-func (service *UserServiceImpl) UpdatePassword(ctx context.Context,id int64, password string) error {
+func (service *UserServiceImpl) UpdatePassword(ctx context.Context, id int64, password string) error {
 	err := service.validate.Struct(ctx)
-	helper.PanicIfError(err)
+	if err != nil {
+		return errors.New("invalid request")
+	}
 
 	dbpool := service.db
-	helper.PanicIfError(err)
+
+	user, err := service.userRepository.FindById(ctx, dbpool, id)
+	if err != nil {
+		return err
+	}
+
+	log.Println("request password untuk update dengan pass: ", password)
 
 	// update password
-	err = service.userRepository.UpdatePassword(ctx, dbpool, id, password)
-	helper.PanicIfError(err)
+	err = service.userRepository.UpdatePassword(ctx, dbpool, user.IdUser, password)
+	if err != nil {
+		return err
+	}
 
 	log.Println("password berhasil diupdate")
 

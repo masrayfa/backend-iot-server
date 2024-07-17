@@ -1,6 +1,8 @@
 package web
 
 import (
+	"log"
+
 	"github.com/masrayfa/internals/models/domain"
 )
 
@@ -14,6 +16,7 @@ type NodeUpdateRequest struct {
 }
 
 func (n *NodeUpdateRequest) ChangeSettedField(node *domain.Node) {
+	log.Println("@ChangeSettedField:domain.Node:start")
 	if n.Name == "" {
 		n.Name = node.Name
 	}
@@ -37,6 +40,8 @@ func (n *NodeUpdateRequest) ChangeSettedField(node *domain.Node) {
 	if n.IsPublic == 0 {
 		n.IsPublic = convertBoolToInt(node.IsPublic)
 	}
+
+	log.Println("@ChangeSettedField:domain.Node:end")
 }
 
 func convertBoolToInt(isPublic bool) int64 {

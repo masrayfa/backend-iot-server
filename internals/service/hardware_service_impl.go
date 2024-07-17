@@ -2,6 +2,7 @@ package service
 
 import (
 	"context"
+	"errors"
 	"log"
 
 	"github.com/go-playground/validator"
@@ -165,5 +166,19 @@ func (service *HardwareServiceImpl) Update(ctx context.Context, req web.Hardware
 }
 
 func (service *HardwareServiceImpl) Delete(ctx context.Context, id int64) error {
-	panic("implement me")
+	err := service.validate.Struct(ctx)
+	if err != nil {
+		return errors.New("error when validate context")
+	}
+
+	dbpool := service.db
+
+	err = service.repository.Delete(ctx, dbpool, id)
+	if err != nil {
+		return err
+	}
+
+	log.Println("Hardware with id: ", id, " has been deleted")
+
+	return nil
 }

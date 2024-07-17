@@ -188,14 +188,18 @@ func (service *NodeServiceImpl) Create(ctx context.Context, req web.NodeCreateRe
 func (service *NodeServiceImpl) Update(ctx context.Context, req web.NodeUpdateRequest, id int64) error {
 	// validate request
 	err := service.validator.Struct(ctx)
-	helper.PanicIfError(err)
+	if err != nil {
+		return err
+	}
 
 	// establish db connection
 	dbpool := service.db
 
 	// get node
 	node, err := service.repository.FindById(ctx, dbpool, id)
-	helper.PanicIfError(err)
+	if err != nil {
+		return err
+	}
 
 	// setup node payload
 	nodePayload := web.NodeUpdateRequest(req)
@@ -212,7 +216,9 @@ func (service *NodeServiceImpl) Update(ctx context.Context, req web.NodeUpdateRe
 
 	// update node
 	_, err = service.repository.Update(ctx, dbpool, &node, &nodePayload)
-	helper.PanicIfError(err)
+	if err != nil {
+		return err
+	}
 
 	return nil
 }

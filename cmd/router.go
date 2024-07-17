@@ -28,7 +28,7 @@ func NewUserRouter(userController controller.UserController) *httprouter.Router 
 	router.appRouter.POST("/login", userController.Login) // done
 	router.appRouter.GET("/", userController.FindAll) // done
 	router.appRouter.GET("/activate", userController.Activation) // done
-	router.appRouter.GET("/user/:user_id", userController.FindById) // done
+	router.appRouter.GET("/by/:id", userController.FindById) // done
 	router.appRouter.PUT("/:id", userController.UpdatePassword) // done
 	router.appRouter.DELETE("/:id", userController.Delete) // done
 	router.appRouter.POST("/forgot-password", userController.ForgotPassword) // done

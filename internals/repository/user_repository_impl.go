@@ -2,6 +2,7 @@ package repository
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"log"
 	"net/http"
@@ -63,7 +64,9 @@ func (r *UserRepositoryImpl) FindByEmail(ctx context.Context, dbpool *pgxpool.Po
 	log.Println("Find by email")
 
 	tx, err := dbpool.Begin(ctx)
-	helper.PanicIfError(err)
+	if err != nil {
+		return user, err 
+	}
 
 	script := "SELECT id_user, email, username, status, isAdmin from user_person WHERE email = $1"
 
@@ -71,6 +74,10 @@ func (r *UserRepositoryImpl) FindByEmail(ctx context.Context, dbpool *pgxpool.Po
 
 	err = rows.Scan(&user.IdUser, &user.Email, &user.Username, &user.Status, &user.IsAdmin)
 	defer helper.CommitOrRollback(ctx, tx)
+	if err != nil {
+		log.Println("Tidak ada email user")
+		return user, err
+	}
 
 	return user, nil
 }
@@ -80,9 +87,11 @@ func (r *UserRepositoryImpl) FindByUsername(ctx context.Context, dbpool *pgxpool
 	log.Println("Find by username", username)
 
 	tx, err := dbpool.Begin(ctx)
-	helper.PanicIfError(err)
+	if err != nil {
+		return user, err
+	}
 
-	sqlStatement := `SELECT id_user, email, username,  status, isAdmin FROM user_person WHERE username=$1`
+	sqlStatement := `SELECT id_user, email, username,  status, isadmin FROM user_person WHERE username= $1 `
 	err = tx.QueryRow(ctx, sqlStatement, username).Scan(
 		&user.IdUser,
 		&user.Email,
@@ -90,10 +99,14 @@ func (r *UserRepositoryImpl) FindByUsername(ctx context.Context, dbpool *pgxpool
 		&user.Status,
 		&user.IsAdmin,
 	)
-	defer helper.CommitOrRollback(ctx, tx)
+	if err != nil {
+		log.Println("Tidak ada username")
+		return user, err
+	}
 
 	log.Println("user di repository: ", user)
 
+	fmt.Println("findby username success")
 	return user, nil
 }
 
@@ -169,7 +182,9 @@ func (r *UserRepositoryImpl) UpdateStatus(ctx context.Context, dbpool *pgxpool.P
 	log.Println("update status repository")
 
 	tx, err := dbpool.Begin(ctx)
-	helper.PanicIfError(err)
+	if err != nil {
+		return err
+	}
 	defer helper.CommitOrRollback(ctx, tx)
 
 	script := "UPDATE user_person SET status = $1 WHERE id_user = $2"
@@ -216,19 +231,29 @@ func (r *UserRepositoryImpl) MatchPassword(ctx context.Context, dbpool *pgxpool.
 	script := "SELECT password FROM user_person WHERE id_user = $1"
 
 	tx, err := dbpool.Begin(ctx)
-	helper.PanicIfError(err)
-
-	err = tx.QueryRow(ctx, script, id).Scan(&userPassword)
-	helper.PanicIfError(err)
-
-	hashedPassword, err := helper.HashPassword(password)
-	helper.PanicIfError(err)
-
-	// compare password
-	if userPassword != hashedPassword {
+	if err != nil {
 		return err
 	}
 
+	err = tx.QueryRow(ctx, script, id).Scan(&userPassword)
+	if err != nil {
+		return err
+	}
+
+	hashedPassword, err := helper.HashPassword(password)
+	if err != nil {
+		return err
+	}
+
+	// compare password
+	log.Println("user password: ", userPassword)
+	log.Println("hashed password: ", hashedPassword)
+	if userPassword != hashedPassword {
+		log.Println("password tidak sama")
+		return errors.New("password tidak sama")
+	} 
+
+	log.Println("password berhasil di match sama")
 	return nil
 }
 

@@ -81,10 +81,29 @@ func (controller *NodeControllerImpl) Update(writer http.ResponseWriter, request
 
 	param := params.ByName("id")
 	id, err := strconv.ParseInt(param, 10, 64)
-	helper.PanicIfError(err)
+	log.Println("@NodeControllerImpl::Update:id-", id)
+	if err != nil {
+		webErrResponse := web.WebErrResponse{
+			Code:    http.StatusBadRequest,
+			Status:  http.StatusText(http.StatusBadRequest),
+			Message: err.Error(),
+		}
+
+		helper.WriteToResponseBody(writer, webErrResponse)
+		return
+	}
 
 	err = controller.nodeService.Update(request.Context(), nodeUpdateRequest, id)
-	helper.PanicIfError(err)
+	if err != nil {
+		webErrResponse := web.WebErrResponse{
+			Code:    http.StatusInternalServerError,
+			Status:  http.StatusText(http.StatusInternalServerError),
+			Message: err.Error(),
+		}
+
+		helper.WriteToResponseBody(writer, webErrResponse)
+		return
+	}
 
 	webResponse := web.WebResponse{
 		Code:   http.StatusOK,
