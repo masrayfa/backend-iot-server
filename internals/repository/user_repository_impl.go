@@ -93,7 +93,7 @@ func (r *UserRepositoryImpl) FindByEmail(ctx context.Context, dbpool *pgxpool.Po
 
 // FindByUsername returns a user by username
 func (r *UserRepositoryImpl) FindByUsername(ctx context.Context, dbpool *pgxpool.Pool, username string) (user domain.User, err error) {
-	log.Println("Find by username", username)
+	log.Println("@user_repository_impl:FindByUsername-start-username: ", username)
 
 	tx, err := dbpool.Begin(ctx)
 	if err != nil {
@@ -109,6 +109,7 @@ func (r *UserRepositoryImpl) FindByUsername(ctx context.Context, dbpool *pgxpool
 		&user.IsAdmin,
 	)
 	if err != nil {
+		log.Println("@user_repository_impl:FindByUsername-no username found-error: ", err)
 		return domain.User{}, errors.New("error when scan row")
 	}
 	defer helper.CommitOrRollback(ctx, tx)

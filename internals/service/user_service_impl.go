@@ -103,29 +103,22 @@ func (service *UserServiceImpl) Register(ctx context.Context, req *http.Request,
 	log.Println("user service", user)
 
 	_, err = service.userRepository.FindByUsername(ctx, dbpool, user.Username)
-	if helper.IsErrorNotFound(err) {
-		log.Println("username tidak ada")
-	} 
-	if err != nil {
-		return web.UserRead{}, err
+	if err == nil {
+		log.Println("@user_service_impl:Register-username is already exists-username: ", user.Username)
+		return web.UserRead{}, errors.New("username is already exists")
 	}
-	log.Println("username pass")
 
 	_, err = service.userRepository.FindByEmail(ctx, dbpool, user.Email)
-	if helper.IsErrorNotFound(err) {
-		log.Println("email tidak ada")
+	if err == nil {
+		log.Println("@user_service_impl:Register-email is already exists-email: ", user.Email)
+		return web.UserRead{}, errors.New("email is already exists")
 	}
-	if err != nil {
-		return web.UserRead{}, err
-	}
-	log.Println("email pass")
 
 	// save user
 	res, err := service.userRepository.Save(ctx, dbpool, user)
 	if err != nil {
 		return web.UserRead{}, err
 	}
-	fmt.Println("res", res)
 
 	// convert user to user response
 	userResponse := web.UserRead {
@@ -147,7 +140,6 @@ func (service *UserServiceImpl) Register(ctx context.Context, req *http.Request,
 	userRead.Email = userResponse.Email
 	userRead.Status = userResponse.Status
 	userRead.IsAdmin = userResponse.IsAdmin
-	log.Println("userRead dari register service", userRead)
 
 	// send email
 	if sendEmail {
