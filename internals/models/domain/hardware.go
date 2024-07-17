@@ -16,3 +16,9 @@ type HardwareWithNode struct {
 	Hardware Hardware
 	Nodes    []Node
 }
+
+type NodeByHardware struct {
+	IdNode   int64
+	Name     string
+	Location string
+}

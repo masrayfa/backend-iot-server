@@ -15,7 +15,7 @@ var databaseUrl string
 func init() {
 	config := configs.GetConfig()
 	databaseConfig := config.Database
-	databaseUrl = fmt.Sprintf("postgres://%s:%s@%s:%s/%s", databaseConfig.Username, databaseConfig.Password, databaseConfig.Host, databaseConfig.Port, databaseConfig.Name)
+	databaseUrl = fmt.Sprintf("postgres://%s:%s@%s/%s", databaseConfig.Username, databaseConfig.Password, databaseConfig.Host, databaseConfig.Name)
 }
 
 func NewDBPool() *pgxpool.Pool {
@@ -44,28 +44,3 @@ func NewDBPool() *pgxpool.Pool {
 	log.Println("Database connected")
 	return dbpool
 }
-
-// func NewDB() {
-// 	config, err := pgx.ParseConfig(databaseUrl)
-// 	if err != nil {
-// 		fmt.Fprintf(os.Stderr, "Unable to parse config: %v\n", err)
-// 		return nil
-// 	}
-
-// 	db, err := pgx.Connect(config)
-// 	if err != nil {
-// 		fmt.Fprintf(os.Stderr, "Unable to connect to database: %v\n", err)
-// 		return nil
-// 	}
-
-// 	// Check connection
-// 	err = db.Ping(context.Background())
-// 	if err != nil {
-// 		fmt.Fprintf(os.Stderr, "Unable to connect to database: %v\n", err)
-// 		db.Close(context.Background())
-// 		return nil
-// 	}
-
-// 	log.Println("Database connected")
-// 	return db
-// }

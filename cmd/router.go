@@ -1,6 +1,8 @@
 package main
 
 import (
+	"net/http"
+
 	"github.com/julienschmidt/httprouter"
 	"github.com/masrayfa/internals/controller"
 	"github.com/masrayfa/internals/middleware"
@@ -16,6 +18,17 @@ func NewRouter(authMiddleware *middleware.AuthenticationMiddleware) *Router {
 		appRouter: httprouter.New(),
 		authMiddleware: authMiddleware,
 	}
+}
+
+func CheckHealthRouter() *httprouter.Router {
+	router := httprouter.New()
+
+	// health endpoint
+	router.GET("/health", func(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
+		w.WriteHeader(http.StatusOK)
+	})
+
+	return router
 }
 
 func NewUserRouter(userController controller.UserController) *httprouter.Router {
@@ -54,7 +67,8 @@ func NewNodeRouter(nodeController controller.NodeController) *httprouter.Router 
 
 	// nodes endpoint
 	router.GET("/", nodeController.FindAll) // done
-	router.GET("/:id", nodeController.FindById) // done
+	router.GET("/by/:id", nodeController.FindById) // done
+	router.GET("/hardware/:id", nodeController.FindHardwareNode) // done
 	router.POST("/", nodeController.Create) // done
 	router.PUT("/:id", nodeController.Update) // done
 	router.DELETE("/:id", nodeController.Delete) // done

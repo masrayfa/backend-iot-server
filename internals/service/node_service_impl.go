@@ -253,3 +253,30 @@ func (service *NodeServiceImpl) Delete(ctx context.Context,id int64) error {
 
 	return nil
 }
+
+func (service *NodeServiceImpl) FindHardwareNode(ctx context.Context, id int64) ([]web.NodeByHardwareResponse, error) {
+	err := service.validator.Struct(ctx)
+	helper.PanicIfError(err)
+
+	dbpool := service.db
+
+	currentUser, ok := ctx.Value("currentUser").(domain.UserRead)
+	if !ok {
+		return nil, errors.New("user not found")
+	}
+	
+
+	nodes, err := service.repository.FindHardwareNode(ctx, dbpool, currentUser.IdUser, id)
+	helper.PanicIfError(err)
+
+	nodeHardwareRes := make([]web.NodeByHardwareResponse, 0)
+	for _, node := range nodes {
+		nodeHardwareRes = append(nodeHardwareRes, web.NodeByHardwareResponse{
+			IdNode: node.IdNode,
+			Name: node.Name,
+			Location: node.Location,
+		})
+	}
+
+	return nodeHardwareRes, nil
+}

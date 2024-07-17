@@ -63,13 +63,12 @@ func (controller *NodeControllerImpl) Create(writer http.ResponseWriter, request
 	nodeCreateRequest := web.NodeCreateRequest{}
 	helper.ReadFromRequestBody(request, &nodeCreateRequest)
 
-	nodeCreateResponse, err := controller.nodeService.Create(request.Context(), nodeCreateRequest)
+	_, err := controller.nodeService.Create(request.Context(), nodeCreateRequest)
 	helper.PanicIfError(err)
 
 	webResponse := web.WebResponse{
 		Code:   http.StatusOK,
 		Status: http.StatusText(http.StatusOK),
-		Data:   nodeCreateResponse,
 	}
 
 	helper.WriteToResponseBody(writer, webResponse)
@@ -108,7 +107,6 @@ func (controller *NodeControllerImpl) Update(writer http.ResponseWriter, request
 	webResponse := web.WebResponse{
 		Code:   http.StatusOK,
 		Status: http.StatusText(http.StatusOK),
-		Data:   nil,
 	}
 
 	log.Println("Node with id: ", id, " has been updated")
@@ -131,6 +129,23 @@ func (controller *NodeControllerImpl) Delete(writer http.ResponseWriter, request
 	}
 
 	log.Println("Node with id: ", id, " has been deleted")
+
+	helper.WriteToResponseBody(writer, webResponse)
+}
+
+func (controller *NodeControllerImpl) FindHardwareNode(writer http.ResponseWriter, request *http.Request, params httprouter.Params) {
+	param := params.ByName("id")
+	id, err := strconv.ParseInt(param, 10, 64)
+	helper.PanicIfError(err)
+
+	hardware, err := controller.nodeService.FindHardwareNode(request.Context(), id)
+	helper.PanicIfError(err)
+
+	webResponse := web.WebResponse{
+		Code:   http.StatusOK,
+		Status: http.StatusText(http.StatusOK),
+		Data:   hardware,
+	}
 
 	helper.WriteToResponseBody(writer, webResponse)
 }

@@ -170,3 +170,34 @@ func (n *NodeRepositoryImpl) Delete(ctx context.Context, pool *pgxpool.Pool, id 
 	}
 	return nil
 }
+
+func (n *NodeRepositoryImpl) FindHardwareNode(ctx context.Context, pool *pgxpool.Pool, userId int64, id int64) ([]domain.NodeByHardware, error) {
+	tx, err := pool.Begin(ctx)
+	helper.PanicIfError(err)
+
+	var nodes []domain.NodeByHardware
+
+	script := "SELECT id_node, name, location FROM node WHERE id_user = $1 AND (id_hardware_node = $2 OR $2 = ANY(id_hardware_sensor))"
+
+	rows, err := tx.Query(ctx, script, userId, id)
+	if err != nil {
+		return nodes, err
+	}
+	defer helper.CommitOrRollback(ctx, tx)
+
+	for rows.Next() {
+		var node domain.NodeByHardware
+		err := rows.Scan(&node.IdNode, &node.Name, &node.Location)
+		if err != nil {
+			return nil, err
+		}
+
+		nodes = append(nodes, node)
+	}
+
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+
+	return nodes, nil
+}
