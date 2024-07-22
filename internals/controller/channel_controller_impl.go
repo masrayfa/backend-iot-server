@@ -124,6 +124,26 @@ func (controller *ChannelControllerImpl) DownloadCSV(writer http.ResponseWriter,
 
 	
 	feed, err := controller.channelRepository.GetNodeChannelCSV(request.Context(), controller.db, id, limit, startDate, endDate)
+	if len(feed) == 0 {
+		webErrResponse := web.WebErrResponse{
+			Code: http.StatusBadRequest,
+			Status: http.StatusText(http.StatusBadRequest),
+			Mesage: "No data found",
+		}
+
+		helper.WriteToResponseBody(writer, webErrResponse)
+		return
+	}
+	if err != nil {
+		webErrResponse := web.WebErrResponse{
+			Code: http.StatusBadRequest,
+			Status: http.StatusText(http.StatusBadRequest),
+			Mesage: err.Error(),
+		}
+		
+		helper.WriteToResponseBody(writer, webErrResponse)
+		return
+	}
 
 	header := []string{"time"}
 	for i := range feed[0].Value {
@@ -158,6 +178,8 @@ func (controller *ChannelControllerImpl) DownloadCSV(writer http.ResponseWriter,
 	}
 
 	helper.WriteToResponseBody(writer, webResponse)
+	
+	// generate csv version
 	// filePath, err := helper.GenerateCSV(feed)
 	// if err != nil {
 	// 	http.Error(writer, "Could not generate CSV", http.StatusInternalServerError)

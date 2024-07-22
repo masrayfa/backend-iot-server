@@ -180,7 +180,7 @@ func (r *ChannelRepositoryImpl) GetNodeChannelCSV(ctx context.Context, pool *pgx
 		return nil, errors.New("error when scan row")
 	}
 
-	log.Println("#Channel:@channel_repository_impl:GetNodeChannelCSV:return success")
+	log.Println("#Channel:@channel_repository_impl:GetNodeChannelCSV:return success: ", channels)
 
 	return channels, nil
 }
