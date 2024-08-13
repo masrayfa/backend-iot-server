@@ -37,7 +37,7 @@ func main() {
 	userController := controller.NewUserController(userService)
 	hardwareController := controller.NewHardwareController(hardwareService)
 	nodeController := controller.NewNodeController(nodeService)
-	channelController := controller.NewChannelController(channelService, channelRepository, dbpool)
+	channelController := controller.NewChannelController(channelService, channelRepository, nodeRepository, dbpool)
 
 	authenticationMiddleware := middleware.NewAuthenticationMiddleware(&validateDependency)
 

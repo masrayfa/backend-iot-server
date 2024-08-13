@@ -10,4 +10,6 @@ type NodeCreateResponse struct {
 	IdHardwareNode   int64    `json:"id_hardware_node"`
 	IdHardwareSensor []int64  `json:"id_hardware_sensor"`
 	IsPublic         bool     `json:"is_public"`
+	XLabel		   []string   `json:"x_label"`
+	YLabel		   []string   `json:"y_label"`
 }

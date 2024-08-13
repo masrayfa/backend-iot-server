@@ -8,4 +8,6 @@ type NodeCreateRequest struct {
 	IdHardwareSensor []int64  `json:"id_hardware_sensor"`
 	IsPublic         bool     `json:"is_public"`
 	IdUser           int64    `json:"id_user"`
+	XLabel           []string `json:"x_label"`
+	YLabel           []string `json:"y_label"`
 }

@@ -11,6 +11,8 @@ type NodeUpdateRequest struct {
 	IdHardwareSensor []int64  `json:"id_hardware_sensor"`
 	FieldSensor      []string `json:"field_sensor"`
 	IsPublic         int64 `json:"is_public"`
+	XLabel           []string `json:"x_label"`
+	YLabel           []string `json:"y_label"`
 }
 
 func (n *NodeUpdateRequest) ChangeSettedField(node *domain.Node) {
@@ -36,6 +38,14 @@ func (n *NodeUpdateRequest) ChangeSettedField(node *domain.Node) {
 
 	if n.IsPublic == 0 {
 		n.IsPublic = convertBoolToInt(node.IsPublic)
+	}
+
+	if n.XLabel == nil || len(n.XLabel) == 0 {
+		n.XLabel = node.XLabel
+	}
+
+	if n.YLabel == nil || len(n.YLabel) == 0 {
+		n.YLabel = node.YLabel
 	}
 }
 

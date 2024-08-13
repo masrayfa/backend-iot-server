@@ -61,8 +61,6 @@ func (service *NodeServiceImpl) FindAll(ctx context.Context, limit int64) ([]dom
 		return []domain.NodeWithFeed{}, err
 	}
 
-	log.Println("node channels dari node all service: ", nodeChannels)
-
 	return nodeChannels, nil
 }
 
@@ -169,6 +167,8 @@ func (service *NodeServiceImpl) Create(ctx context.Context, req web.NodeCreateRe
 		IdHardwareNode: req.IdHardwareNode,
 		IdHardwareSensor: req.IdHardwareSensor,
 		IsPublic: req.IsPublic,
+		XLabel: req.XLabel,
+		YLabel: req.YLabel,
 	}
 
 	// create node in database
@@ -184,6 +184,8 @@ func (service *NodeServiceImpl) Create(ctx context.Context, req web.NodeCreateRe
 		IdHardwareNode: node.IdHardwareNode,
 		IdHardwareSensor: node.IdHardwareSensor,
 		IsPublic: node.IsPublic,
+		XLabel: node.XLabel,
+		YLabel: node.YLabel,
 	}
 
 	return nodeCreateRes, nil	

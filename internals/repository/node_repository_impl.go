@@ -47,11 +47,10 @@ func (n *NodeRepositoryImpl) FindAll(ctx context.Context, pool *pgxpool.Pool, cu
 		}
 	}
 
-
 	for rows.Next() {
 		var node domain.Node
 		// Scan ini rus sesuai dengan urutan kolom di tabel node di database postgres
-		err := rows.Scan(&node.IdNode, &node.IdUser, &node.IdHardwareNode, &node.Name, &node.Location, &node.IdHardwareSensor, &node.FieldSensor, &node.IsPublic)
+		err := rows.Scan(&node.IdNode, &node.IdUser, &node.IdHardwareNode, &node.Name, &node.Location, &node.IdHardwareSensor, &node.FieldSensor, &node.IsPublic, &node.XLabel, &node.YLabel)
 		if err != nil {
 			return nil, errors.New("error when scan row")
 		}
@@ -62,6 +61,8 @@ func (n *NodeRepositoryImpl) FindAll(ctx context.Context, pool *pgxpool.Pool, cu
 }
 
 func (n *NodeRepositoryImpl) FindById(ctx context.Context, pool *pgxpool.Pool, id int64) (domain.Node, error) {
+	log.Println("@node_repository_impl:FindById:start")
+
 	tx, err := pool.Begin(ctx)
 	if err != nil {
 		return domain.Node{}, err
@@ -71,11 +72,13 @@ func (n *NodeRepositoryImpl) FindById(ctx context.Context, pool *pgxpool.Pool, i
 
 	script := "SELECT * FROM node WHERE id_node = $1"
 
-	err = tx.QueryRow(ctx, script, id).Scan(&node.IdNode, &node.IdUser, &node.IdHardwareNode, &node.Name, &node.Location, &node.IdHardwareSensor, &node.FieldSensor, &node.IsPublic)
+	err = tx.QueryRow(ctx, script, id).Scan(&node.IdNode, &node.IdUser, &node.IdHardwareNode, &node.Name, &node.Location, &node.IdHardwareSensor, &node.FieldSensor, &node.IsPublic, &node.XLabel, &node.YLabel)
 	if err != nil {
+		log.Println("@node_repository_impl:FindById:error-query-row")
 		return node, err
 	}
 
+	log.Println("@node_repository_impl:FindById:end")
 	return node, nil
 }
 
@@ -97,7 +100,7 @@ func (n *NodeRepositoryImpl) GetHardwareNode(ctx context.Context, pool *pgxpool.
 
 	for rows.Next() {
 		var node domain.Node
-		err := rows.Scan(&node.IdNode, &node.Name, &node.Location, &node.IdUser, &node.IdHardwareNode)
+		err := rows.Scan(&node.IdNode, &node.Name, &node.Location, &node.IdUser, &node.IdHardwareNode, &node.IdHardwareSensor, &node.FieldSensor, &node.IsPublic, &node.XLabel, &node.YLabel)
 		if err != nil {
 			return nil, errors.New("error when scan row")
 		}
@@ -128,13 +131,15 @@ func (n *NodeRepositoryImpl) Create(ctx context.Context, pool *pgxpool.Pool, nod
 		IdHardwareNode: nodePayload.IdHardwareNode,
 		IdHardwareSensor: nodePayload.IdHardwareSensor,
 		IsPublic: nodePayload.IsPublic,
+		XLabel: nodePayload.XLabel,
+		YLabel: nodePayload.YLabel,
 	}
 
 	// sql script
-	script := "INSERT INTO node (name, location, id_hardware_node, id_user, is_public, id_hardware_sensor, field_sensor) VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING id_node"
+	script := "INSERT INTO node (name, location, id_hardware_node, id_user, is_public, id_hardware_sensor, field_sensor, x_label, y_label) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9) RETURNING id_node"
 
 	// insert node
-	_, err = tx.Exec(ctx, script, node.Name, node.Location, node.IdHardwareNode, node.IdUser, node.IsPublic, node.IdHardwareSensor, node.FieldSensor)
+	_, err = tx.Exec(ctx, script, node.Name, node.Location, node.IdHardwareNode, node.IdUser, node.IsPublic, node.IdHardwareSensor, node.FieldSensor, node.XLabel, node.YLabel)
 	if err != nil {
 		return node, errors.New("error when insert node")
 	}

@@ -19,13 +19,15 @@ type ChannelControllerImpl struct {
 	db *pgxpool.Pool
 	channelService service.ChannelService
 	channelRepository repository.ChannelRepository
+	nodeRepository repository.NodeRepository
 }
 
-func NewChannelController(channelService service.ChannelService, channelRepository repository.ChannelRepository, db *pgxpool.Pool) ChannelController {
+func NewChannelController(channelService service.ChannelService, channelRepository repository.ChannelRepository, nodeRepository repository.NodeRepository, db *pgxpool.Pool) ChannelController {
 	return &ChannelControllerImpl{
 		db: db,
 		channelService: channelService,
 		channelRepository: channelRepository,
+		nodeRepository: nodeRepository,
 	}
 }
 
@@ -145,17 +147,38 @@ func (controller *ChannelControllerImpl) DownloadCSV(writer http.ResponseWriter,
 		return
 	}
 
+	log.Println("@ChannelControllerImpl:DownloadCSV:id: ", id)
+	node, err := controller.nodeRepository.FindById(request.Context(), controller.db, id)
+	if err != nil {
+		webErrResponse := web.WebErrResponse{
+			Code: http.StatusBadRequest,
+			Status: http.StatusText(http.StatusBadRequest),
+			Mesage: err.Error(),
+		}
+		
+		helper.WriteToResponseBody(writer, webErrResponse)
+		return
+	}
+
 	header := []string{"time"}
 	for i := range feed[0].Value {
-		header = append(header, fmt.Sprintf("value %d", i+1))
+		for j := range node.FieldSensor {
+			header = append(header, fmt.Sprintf("%s %d", node.FieldSensor[j], i+1))
+		}
 	}
+
+	// header := []string{"time"}
+	// for i := range feed[0].Value {
+	// 	header = append(header, fmt.Sprintf("value %d", i+1))
+	// }
 
 	var records []map[string]interface{}
 	for _, d := range feed {
 		record := make(map[string]interface{})
 		record["time"] = d.Time
 		for i, v := range d.Value {
-			record[fmt.Sprintf("value %d", i+1)] = v
+			record[fmt.Sprintf("%s %d", node.FieldSensor[i], i+1)] = v
+			// record[fmt.Sprintf("value %d", i+1)] = v
 		}
 		records = append(records, record)
 	}
