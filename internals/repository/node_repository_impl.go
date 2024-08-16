@@ -149,17 +149,18 @@ func (n *NodeRepositoryImpl) Create(ctx context.Context, pool *pgxpool.Pool, nod
 }
 
 func (n *NodeRepositoryImpl) Update(ctx context.Context, pool *pgxpool.Pool, node *domain.Node, payload *web.NodeUpdateRequest) (domain.Node, error) {
+	log.Println("@node_repository_impl:Update:start")
 	tx, err := pool.Begin(ctx)
 	if err != nil {
 		return domain.Node{}, errors.New("error when begin transaction")
 	}
 	defer helper.CommitOrRollback(ctx, tx)
 
-	script := "UPDATE node SET name = $1, location = $2, id_hardware_node = $3, id_hardware_sensor = $4, field_sensor = $5 WHERE id_node = $6"
+	script := "UPDATE node SET name = $1, location = $2, id_hardware_node = $3, id_hardware_sensor = $4, field_sensor = $5, x_label = $6, y_label = $7 WHERE id_node = $8"
 
-	res, err := tx.Exec(ctx, script, payload.Name, payload.Location, payload.IdHardwareNode, payload.IdHardwareSensor, payload.FieldSensor, node.IdNode)
+	res, err := tx.Exec(ctx, script, payload.Name, payload.Location, payload.IdHardwareNode, payload.IdHardwareSensor, payload.FieldSensor, payload.XLabel, payload.YLabel, node.IdNode)
 	if err != nil {
-		return domain.Node{}, errors.New("error when update node")
+		return domain.Node{}, errors.New("error when update node exec")
 	}
 
 	if res.RowsAffected() != 1 {
@@ -167,6 +168,7 @@ func (n *NodeRepositoryImpl) Update(ctx context.Context, pool *pgxpool.Pool, nod
 		return domain.Node{}, errors.New("error when update node")
 	}
 
+	log.Println("@node_repository_impl:Update:end")
 	// or return nil if the return only return error
 	return *node, nil
 }
